@@ -346,6 +346,19 @@ abstract class AbstractProtocMojo extends AbstractMojo {
     protected boolean includeSourceInfoInDescriptorSet;
 
     /**
+     * If set to {@code true}, the arguments to protoc will be put in a file and run as an argument
+     * file.  This is helpful if you are getting Command line is too long errors
+     * This is only supported for protoc 3.5.0 and higher
+     *
+     * @since 0.6.0
+     */
+    @Parameter(
+        required = false,
+        defaultValue = "false"
+    )
+    protected boolean useArgumentFile;
+
+    /**
      * Specifies one of more custom protoc plugins, written in Java
      * and available as Maven artifacts. An executable plugin will be created
      * at execution time. On UNIX the executable is a shell script and on
@@ -661,6 +674,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
                     includeDependenciesInDescriptorSet,
                     includeSourceInfoInDescriptorSet);
         }
+        protocBuilder.useArgumentFile(useArgumentFile);
     }
 
     /**

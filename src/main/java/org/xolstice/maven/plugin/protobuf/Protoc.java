@@ -19,6 +19,9 @@ package org.xolstice.maven.plugin.protobuf;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
@@ -113,6 +116,11 @@ final class Protoc {
     private final StringStreamConsumer error;
 
     /**
+     * A boolean indicating if the parameters to protoc should be passed in an argument file
+     */
+    private final boolean useArgumentFile;
+
+    /**
      * Constructs a new instance. This should only be used by the {@link Builder}.
      *
      * @param executable path to the {@code protoc} executable.
@@ -133,6 +141,7 @@ final class Protoc {
      * @param nativePluginId a unique id of a native plugin.
      * @param nativePluginExecutable path to the native plugin executable.
      * @param nativePluginParameter an optional parameter for a native plugin.
+     * @param useArgumentFile If {@code true}, parameters to protoc will be put in an argument file
      */
     private Protoc(
             final String executable,
@@ -150,7 +159,8 @@ final class Protoc {
             final File pluginDirectory,
             final String nativePluginId,
             final String nativePluginExecutable,
-            final String nativePluginParameter) {
+            final String nativePluginParameter,
+            final boolean useArgumentFile) {
         this.executable = checkNotNull(executable, "executable");
         this.protoPathElements = checkNotNull(protoPath, "protoPath");
         this.protoFiles = checkNotNull(protoFiles, "protoFiles");
@@ -169,6 +179,7 @@ final class Protoc {
         this.nativePluginParameter = nativePluginParameter;
         this.error = new StringStreamConsumer();
         this.output = new StringStreamConsumer();
+        this.useArgumentFile = useArgumentFile;
     }
 
     /**
@@ -180,7 +191,18 @@ final class Protoc {
     public int execute(final Log log) throws CommandLineException, InterruptedException {
         final Commandline cl = new Commandline();
         cl.setExecutable(executable);
-        cl.addArguments(buildProtocCommand().toArray(new String[] {}));
+        String[] args = buildProtocCommand().toArray(new String[] {});
+        if (useArgumentFile) {
+            try {
+                File argumentsFile = createFileWithArguments(args);
+                cl.addArguments(
+                    new String[]{"@" + argumentsFile.getCanonicalPath().replace( File.separatorChar, '/')});
+            } catch (IOException e) {
+                log.error(LOG_PREFIX + "Error creating file with protoc arguments", e);
+            }
+        } else {
+            cl.addArguments(args);
+        }
         // There is a race condition in JDK that may sporadically prevent process creation on Linux
         // https://bugs.openjdk.java.net/browse/JDK-8068370
         // In order to mitigate that, retry up to 2 more times before giving up
@@ -345,6 +367,34 @@ final class Protoc {
     }
 
     /**
+     * Put args into a temp file to be referenced using the @ option in protoc command line
+     *
+     * @param args
+     * @return the temporary file wth the arguments
+     * @throws IOException
+     */
+    private File createFileWithArguments(String[] args) throws IOException {
+        PrintWriter writer = null;
+        try {
+            File tempFile = File.createTempFile(Protoc.class.getName(), "arguments");
+            tempFile.deleteOnExit();
+
+            writer = new PrintWriter(new FileWriter(tempFile));
+            for (int i = 0; i < args.length; i++) {
+                writer.write(args[i]);
+                writer.println();
+            }
+            writer.flush();
+
+            return tempFile;
+        } finally {
+            if (writer != null) {
+                writer.close();
+            }
+        }
+    }
+
+    /**
      * This class builds {@link Protoc} instances.
      */
     static final class Builder {
@@ -402,6 +452,8 @@ final class Protoc {
         private boolean includeImportsInDescriptorSet;
 
         private boolean includeSourceInfoInDescriptorSet;
+
+        private boolean useArgumentFile;
 
         /**
          * Constructs a new builder.
@@ -570,6 +622,11 @@ final class Protoc {
             return this;
         }
 
+        public Builder useArgumentFile(final boolean useArgumentFile) {
+            this.useArgumentFile = useArgumentFile;
+            return this;
+        }
+
         private void checkProtoFileIsInProtopath(final File protoFile) {
             assert protoFile.isFile();
             checkState(checkProtoFileIsInProtopathHelper(protoFile.getParentFile()));
@@ -668,7 +725,8 @@ final class Protoc {
                     pluginDirectory,
                     nativePluginId,
                     nativePluginExecutable,
-                    nativePluginParameter);
+                    nativePluginParameter,
+                    useArgumentFile);
         }
     }
 }
