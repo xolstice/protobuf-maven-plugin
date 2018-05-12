@@ -24,7 +24,25 @@ assert generatedJavaFile.isFile();
 
 content = generatedJavaFile.text;
 assert content.contains('package test');
-assert content.contains('class Test');
+assert content.contains('class TestProtos');
 assert content.contains('class TestMessage');
+
+generatedJavaFile = new File(outputDirectory, 'test/TestProtosJp.java');
+assert generatedJavaFile.exists();
+assert generatedJavaFile.isFile();
+
+content = generatedJavaFile.text;
+assert content.contains('package test');
+assert content.contains('class TestProtosJp');
+assert content.contains('class TestMessageJp');
+
+generatedJavaFile = new File(outputDirectory, 'test/TestProtosRu.java');
+assert generatedJavaFile.exists();
+assert generatedJavaFile.isFile();
+
+content = generatedJavaFile.text;
+assert content.contains('package test');
+assert content.contains('class TestProtosRu');
+assert content.contains('class TestMessageRu');
 
 return true;

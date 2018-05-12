@@ -34,44 +34,26 @@
     <name>Integration Test 29</name>
 
     <properties>
-        <protobufVersion>3.5.0</protobufVersion>
+        <!--  @args files are supported by protoc starting with version 3.5.0 -->
+        <protobufVersion>3.5.1</protobufVersion>
     </properties>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-toolchains-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>protobuf-toolchain</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>toolchain</goal>
-                        </goals>
-                        <configuration>
-                            <toolchains>
-                                <protobuf>
-                                    <version>${protobufVersion}</version>
-                                </protobuf>
-                            </toolchains>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>@project.version@</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <useArgumentFile>true</useArgumentFile>
-                </configuration>
                 <executions>
                     <execution>
                         <goals>
                             <goal>compile</goal>
                         </goals>
+                        <configuration>
+                            <protocArtifact>com.google.protobuf:protoc:${protobufVersion}:exe:${os.detected.classifier}
+                            </protocArtifact>
+                            <useArgumentFile>true</useArgumentFile>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

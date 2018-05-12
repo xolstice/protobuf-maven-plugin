@@ -17,8 +17,8 @@
 syntax = "proto3";
 
 option java_package = "test";
-option java_outer_classname = "TestProtos";
+option java_outer_classname = "TestProtosRu";
 option optimize_for = SPEED;
 
-message TestMessage {
+message TestMessageRu {
 }

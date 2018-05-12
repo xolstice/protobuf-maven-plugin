@@ -353,8 +353,8 @@ abstract class AbstractProtocMojo extends AbstractMojo {
      * @since 0.6.0
      */
     @Parameter(
-        required = false,
-        defaultValue = "false"
+            required = false,
+            defaultValue = "false"
     )
     protected boolean useArgumentFile;
 

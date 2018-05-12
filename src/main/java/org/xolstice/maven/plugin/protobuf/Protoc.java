@@ -19,9 +19,6 @@ package org.xolstice.maven.plugin.protobuf;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
@@ -29,6 +26,9 @@ import org.codehaus.plexus.util.cli.CommandLineUtils.StringStreamConsumer;
 import org.codehaus.plexus.util.cli.Commandline;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -177,9 +177,9 @@ final class Protoc {
         this.nativePluginId = nativePluginId;
         this.nativePluginExecutable = nativePluginExecutable;
         this.nativePluginParameter = nativePluginParameter;
+        this.useArgumentFile = useArgumentFile;
         this.error = new StringStreamConsumer();
         this.output = new StringStreamConsumer();
-        this.useArgumentFile = useArgumentFile;
     }
 
     /**
@@ -195,8 +195,8 @@ final class Protoc {
         if (useArgumentFile) {
             try {
                 File argumentsFile = createFileWithArguments(args);
-                cl.addArguments(
-                    new String[]{"@" + argumentsFile.getCanonicalPath().replace( File.separatorChar, '/')});
+                log.debug(LOG_PREFIX + "Using arguments file " + argumentsFile.getPath());
+                cl.addArguments(new String[] {"@" + argumentsFile.getAbsolutePath()});
             } catch (IOException e) {
                 log.error(LOG_PREFIX + "Error creating file with protoc arguments", e);
             }
@@ -356,33 +356,43 @@ final class Protoc {
      * @return the output
      */
     public String getOutput() {
-        return output.getOutput();
+        return fixUnicodeOutput(output.getOutput());
     }
 
     /**
      * @return the error
      */
     public String getError() {
-        return error.getOutput();
+        return fixUnicodeOutput(error.getOutput());
     }
 
     /**
-     * Put args into a temp file to be referenced using the @ option in protoc command line
+     * Transcodes the output from system default charset to UTF-8.
+     * Protoc emits messages in UTF-8, but they are captured into a stream that has a system-default encoding.
+     *
+     * @param message a UTF-8 message in system-default encoding.
+     * @return the same message converted into a unicode string.
+     */
+    private static String fixUnicodeOutput(final String message) {
+        return new String(message.getBytes(), Charset.forName("UTF-8"));
+    }
+
+    /**
+     * Put args into a temp file to be referenced using the @ option in protoc command line.
      *
      * @param args
      * @return the temporary file wth the arguments
      * @throws IOException
      */
-    private File createFileWithArguments(String[] args) throws IOException {
+    private static File createFileWithArguments(String[] args) throws IOException {
         PrintWriter writer = null;
         try {
-            File tempFile = File.createTempFile(Protoc.class.getName(), "arguments");
+            File tempFile = File.createTempFile("protoc", null);
             tempFile.deleteOnExit();
 
-            writer = new PrintWriter(new FileWriter(tempFile));
-            for (int i = 0; i < args.length; i++) {
-                writer.write(args[i]);
-                writer.println();
+            writer = new PrintWriter(tempFile, "UTF-8");
+            for (final String arg : args) {
+                writer.println(arg);
             }
             writer.flush();
 
