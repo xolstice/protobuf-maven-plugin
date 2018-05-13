@@ -174,6 +174,18 @@ abstract class AbstractProtocMojo extends AbstractMojo {
     private List<ArtifactRepository> remoteRepositories;
 
     /**
+     * A directory where temporary files will be generated.
+     *
+     * @since 0.6.0
+     */
+    @Parameter(
+            required = true,
+            readonly = true,
+            defaultValue = "${project.build.directory}"
+    )
+    private File tempDirectory;
+
+    /**
      * A directory where native launchers for java protoc plugins will be generated.
      *
      * @since 0.3.0
@@ -674,6 +686,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
                     includeDependenciesInDescriptorSet,
                     includeSourceInfoInDescriptorSet);
         }
+        protocBuilder.setTempDirectory(tempDirectory);
         protocBuilder.useArgumentFile(useArgumentFile);
     }
 
