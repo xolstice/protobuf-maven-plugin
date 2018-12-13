@@ -740,7 +740,8 @@ final class Protoc {
                     || nativePluginId.equals("csharp")
                     || nativePluginId.equals("cpp")
                     || nativePluginId.equals("descriptor_set")) {
-                throw new MojoConfigurationException("'nativePluginId' matches one of the built-in protoc plugins");
+                throw new MojoConfigurationException("'nativePluginId' matches one of the built-in "
+                        + "protoc plugins: " + nativePluginId);
             }
             this.nativePluginId = nativePluginId;
             return this;
