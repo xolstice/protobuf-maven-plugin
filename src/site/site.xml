@@ -16,9 +16,35 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/DECORATION/1.3.0"
+<project xmlns="http://maven.apache.org/DECORATION/1.8.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.0 http://maven.apache.org/xsd/decoration-1.8.0.xsd">
+
+    <skin>
+        <groupId>com.bernardomg.maven.skins</groupId>
+        <artifactId>docs-maven-skin</artifactId>
+        <version>${docsMavenSkinVersion}</version>
+    </skin>
+
+    <custom>
+        <skinConfig>
+            <keywords>Maven, Protobuf, Protocol Buffers, protoc</keywords>
+            <descriptionUrl>Check the documentation for the Docs Maven Skin</descriptionUrl>
+            <topNav>
+                <menu>Overview</menu>
+                <menu>Examples</menu>
+                <menu>Info and reports</menu>
+            </topNav>
+            <bottomNav>
+                <menu>Code</menu>
+                <menu>CI</menu>
+                <menu>Releases</menu>
+            </bottomNav>
+            <iconNav>
+                <menu>Icons</menu>
+            </iconNav>
+        </skinConfig>
+    </custom>
 
     <body>
 
@@ -41,6 +67,38 @@
             <item name="Custom Protoc Plugins" href="examples/protoc-plugin.html"/>
         </menu>
 
-        <menu ref="reports"/>
+        <!--<menu ref="reports"/>-->
+
+        <menu name="Info and reports" inherit="bottom">
+            <item name="Info" href="./project-info.html"/>
+            <item name="Reports" href="./project-reports.html"/>
+        </menu>
+
+        <menu name="Code" inherit="bottom">
+            <item name="SCM" href="${project.scm.url}">
+                <description>GitHub</description>
+            </item>
+            <item name="Issues" href="${project.issueManagement.url}">
+                <description>${project.issueManagement.system}</description>
+            </item>
+        </menu>
+        <menu name="CI" inherit="bottom">
+            <item name="Linux" href="${project.ciManagement.url}">
+                <description>${project.ciManagement.system}</description>
+            </item>
+            <item name="Windows"
+                  href="https://ci.appveyor.com/project/xolstice/protobuf-maven-plugin/branch/master">
+                <description>Appveyor</description>
+            </item>
+        </menu>
+        <menu name="Releases" inherit="bottom">
+            <item name="Bintray"
+                  href="https://bintray.com/xolstice/maven/protobuf-maven-plugin/"/>
+            <item name="Maven Central"
+                  href="https://repo1.maven.org/maven2/org/xolstice/maven/plugins/protobuf-maven-plugin/"/>
+        </menu>
+        <menu name="Icons" inherit="bottom">
+            <item name="Github" img="github" href="${project.scm.url}"/>
+        </menu>
     </body>
 </project>

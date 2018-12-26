@@ -43,6 +43,7 @@
         <plexusComponentVersion>2.0.0</plexusComponentVersion>
         <plexusUtilsVersion>3.1.1</plexusUtilsVersion>
         <pluginToolsVersion>3.6.0</pluginToolsVersion>
+        <docsMavenSkinVersion>1.4.0</docsMavenSkinVersion>
 
         <goalPrefix>protobuf</goalPrefix>
     </properties>
@@ -104,6 +105,11 @@
         <system>Github</system>
         <url>https://github.com/xolstice/protobuf-maven-plugin/issues/</url>
     </issueManagement>
+
+    <ciManagement>
+        <system>Travis CI</system>
+        <url>https://travis-ci.com/xolstice/protobuf-maven-plugin</url>
+    </ciManagement>
 
     <build>
         <pluginManagement>
@@ -198,6 +204,13 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
                     <version>3.7.1</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.bernardomg.maven.skins</groupId>
+                            <artifactId>docs-maven-skin</artifactId>
+                            <version>${docsMavenSkinVersion}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
 
                 <plugin>
