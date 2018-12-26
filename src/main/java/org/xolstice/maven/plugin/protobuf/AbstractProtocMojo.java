@@ -870,7 +870,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         if (dependencyArtifacts.isEmpty()) {
             return emptyList();
         }
-        final List<File> dependencyArtifactFiles = new ArrayList<File>(dependencyArtifacts.size());
+        final List<File> dependencyArtifactFiles = new ArrayList<>(dependencyArtifacts.size());
         for (final Artifact artifact : dependencyArtifacts) {
             dependencyArtifactFiles.add(artifact.getFile());
         }
@@ -904,7 +904,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
                 throw new MojoInitializationException("Unable to clean up temporary proto file directory", e);
             }
         }
-        final List<File> protoDirectories = new ArrayList<File>();
+        final List<File> protoDirectories = new ArrayList<>();
         for (final File classpathElementFile : classpathElementFiles) {
             // for some reason under IAM, we receive poms as dependent files
             // I am excluding .xml rather than including .jar as there may be other extensions in use (sar, har, zip)
@@ -986,7 +986,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         if (directories == null) {
             throw new MojoConfigurationException("'directories' is null");
         }
-        final List<File> protoFiles = new ArrayList<File>();
+        final List<File> protoFiles = new ArrayList<>();
         for (final File directory : directories) {
             protoFiles.addAll(findProtoFilesInDirectory(directory));
         }

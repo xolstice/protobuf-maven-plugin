@@ -33,13 +33,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- JDK version -->
-        <java.sdk.version>1.6</java.sdk.version>
+        <java.sdk.version>1.8</java.sdk.version>
         <!-- Settings for the java compiler -->
         <java.compiler.compilerVersion>${java.sdk.version}</java.compiler.compilerVersion>
         <java.compiler.source>${java.sdk.version}</java.compiler.source>
         <java.compiler.target>${java.sdk.version}</java.compiler.target>
 
-        <mavenVersion>3.0</mavenVersion>
+        <mavenVersion>3.3.9</mavenVersion>
 
         <protobufVersion>3.6.1</protobufVersion>
     </properties>
@@ -82,13 +82,13 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.0</version>
+                    <version>3.0.0-M3</version>
                     <inherited>true</inherited>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>3.1.1</version>
                     <inherited>true</inherited>
                 </plugin>
                 <plugin>

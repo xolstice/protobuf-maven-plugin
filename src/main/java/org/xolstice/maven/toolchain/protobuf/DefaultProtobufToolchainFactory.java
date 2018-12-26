@@ -28,11 +28,7 @@ import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Properties;
 
@@ -76,7 +72,7 @@ public class DefaultProtobufToolchainFactory implements ToolchainFactory {
         }
 
         // populate the provides section
-        final Properties provides = getProvidesProperties(model);
+        final Properties provides = model.getProvides();
         for (final Map.Entry<Object, Object> provide : provides.entrySet()) {
             final String key = (String) provide.getKey();
             final String value = (String) provide.getValue();
@@ -103,20 +99,6 @@ public class DefaultProtobufToolchainFactory implements ToolchainFactory {
         return null;
     }
 
-    /**
-     * Get {@code provides} properties in in a way compatible with toolchains descriptor version 1.0
-     * (Maven 2.0.9 to 3.2.3, where it is represented as Object/DOM) and descriptor version 1.1
-     * (Maven 3.2.4 and later, where it is represented as Properties).
-     *
-     * @param model the toolchain model as read from XML
-     * @return the properties defined in the {@code provides} element
-     * @see <a href="http://jira.codehaus.org/browse/MNG-5718">MNG-5718</a>
-     */
-    protected static Properties getProvidesProperties(final ToolchainModel model) {
-        final Object value = getBeanProperty(model, "provides");
-        return value instanceof Properties ? (Properties) value : toProperties((Xpp3Dom) value);
-    }
-
     protected static Properties toProperties(final Xpp3Dom dom) {
         final Properties props = new Properties();
         final Xpp3Dom[] children = dom.getChildren();
@@ -124,22 +106,5 @@ public class DefaultProtobufToolchainFactory implements ToolchainFactory {
             props.setProperty(child.getName(), child.getValue());
         }
         return props;
-    }
-
-    protected static Object getBeanProperty(final Object obj, final String property) {
-        try {
-            final Method method = new PropertyDescriptor(property, obj.getClass()).getReadMethod();
-            return method.invoke(obj);
-        } catch (final IntrospectionException e) {
-            throw new RuntimeException("Incompatible toolchain API", e);
-        } catch (final IllegalAccessException e) {
-            throw new RuntimeException("Incompatible toolchain API", e);
-        } catch (final InvocationTargetException e) {
-            final Throwable cause = e.getCause();
-            if (cause instanceof RuntimeException) {
-                throw (RuntimeException) cause;
-            }
-            throw new RuntimeException("Incompatible toolchain API", e);
-        }
     }
 }

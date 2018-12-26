@@ -33,16 +33,16 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- JDK version -->
-        <java.sdk.version>1.6</java.sdk.version>
+        <java.sdk.version>1.8</java.sdk.version>
         <!-- Settings for the java compiler -->
         <java.compiler.compilerVersion>${java.sdk.version}</java.compiler.compilerVersion>
         <java.compiler.source>${java.sdk.version}</java.compiler.source>
         <java.compiler.target>${java.sdk.version}</java.compiler.target>
 
-        <mavenVersion>3.0</mavenVersion>
+        <mavenVersion>3.3.9</mavenVersion>
         <plexusComponentVersion>1.7.1</plexusComponentVersion>
-        <plexusUtilsVersion>3.1.0</plexusUtilsVersion>
-        <pluginToolsVersion>3.5.2</pluginToolsVersion>
+        <plexusUtilsVersion>3.1.1</plexusUtilsVersion>
+        <pluginToolsVersion>3.6.0</pluginToolsVersion>
 
         <goalPrefix>protobuf</goalPrefix>
     </properties>
@@ -111,6 +111,12 @@
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.1.0</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>3.0.0-M2</version>
                 </plugin>
@@ -124,7 +130,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
-                    <version>3.5.2</version>
+                    <version>3.6.0</version>
                 </plugin>
 
                 <plugin>
@@ -148,7 +154,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.0</version>
+                    <version>3.0.0-M3</version>
                 </plugin>
 
                 <plugin>
@@ -166,7 +172,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>3.1.1</version>
                 </plugin>
 
                 <plugin>
@@ -202,6 +208,12 @@
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>3.0.0-M1</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
                     <version>2.5.3</version>
                 </plugin>
@@ -209,7 +221,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
-                    <version>2.8.2</version>
+                    <version>3.0.0-M1</version>
                 </plugin>
 
             </plugins>
@@ -456,7 +468,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.5.2</version>
+                <version>3.6.0</version>
                 <configuration>
                     <mojoDependencies />
                     <goalPrefix>${goalPrefix}</goalPrefix>
@@ -613,18 +625,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <configuration>
-                            <!--
-                                Explicitly disable updating the release metadata in the remote repository,
-                                because otherwise that messes BinTray repository layout up.
-                                BinTray itself takes care of metadata when the artifacts are promoted.
-                            -->
-                            <updateReleaseInfo>false</updateReleaseInfo>
-                        </configuration>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -650,6 +650,12 @@
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
             <version>${pluginToolsVersion}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.maven</groupId>
+                    <artifactId>maven-artifact</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
@@ -684,6 +690,10 @@
                 <exclusion>
                     <groupId>org.codehaus.plexus</groupId>
                     <artifactId>plexus-utils</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

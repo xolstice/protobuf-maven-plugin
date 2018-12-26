@@ -41,6 +41,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.Collections.emptyMap;
+
 /**
  * Creates an executable {@code protoc} plugin (written in Java) from a {@link ProtocPlugin} specification.
  *
@@ -66,7 +68,7 @@ public class ProtocPluginAssembler {
 
     private final File pluginDirectory;
 
-    private final List<File> resolvedJars = new ArrayList<File>();
+    private final List<File> resolvedJars = new ArrayList<>();
 
     private final File pluginExecutableFile;
 
@@ -136,9 +138,7 @@ public class ProtocPluginAssembler {
             log.debug("winJvmDataModel=" + pluginDefinition.getWinJvmDataModel());
         }
 
-        PrintWriter out = null;
-        try {
-            out = new PrintWriter(new FileWriter(winRun4JIniFile));
+        try (final PrintWriter out = new PrintWriter(new FileWriter(winRun4JIniFile))) {
             if (jvmLocation != null) {
                 out.println("vm.location=" + jvmLocation.getAbsolutePath());
             }
@@ -161,7 +161,7 @@ public class ProtocPluginAssembler {
                 index++;
             }
 
-            out.println("vm.version.min=1.6");
+            out.println("vm.version.min=1.8");
 
             // keep from logging to stdout (the default)
             out.println("log.level=none");
@@ -170,10 +170,6 @@ public class ProtocPluginAssembler {
         } catch (IOException e) {
             throw new MojoInitializationException(
                     "Could not write WinRun4J ini file: " + winRun4JIniFile.getAbsolutePath(), e);
-        } finally {
-            if (out != null) {
-                out.close();
-            }
         }
     }
 
@@ -211,9 +207,7 @@ public class ProtocPluginAssembler {
             log.debug("javaLocation=" + javaLocation.getAbsolutePath());
         }
 
-        PrintWriter out = null;
-        try {
-            out = new PrintWriter(new FileWriter(pluginExecutableFile));
+        try (final PrintWriter out = new PrintWriter(new FileWriter(pluginExecutableFile))) {
             out.println("#!/bin/sh");
             out.println();
             out.print("CP=");
@@ -240,10 +234,6 @@ public class ProtocPluginAssembler {
             out.println();
         } catch (IOException e) {
             throw new MojoInitializationException("Could not write plugin script file: " + pluginExecutableFile, e);
-        } finally {
-            if (out != null) {
-                out.close();
-            }
         }
     }
 
@@ -276,7 +266,7 @@ public class ProtocPluginAssembler {
                 .setArtifact(rootResolutionArtifact)
                 .setResolveRoot(false)
                 .setArtifactDependencies(Collections.singleton(protocPluginArtifact))
-                .setManagedVersionMap(Collections.emptyMap())
+                .setManagedVersionMap(emptyMap())
                 .setLocalRepository(localRepository)
                 .setRemoteRepositories(remoteRepositories)
                 .setOffline(session.isOffline())

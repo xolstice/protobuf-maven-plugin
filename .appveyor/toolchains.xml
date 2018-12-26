@@ -29,17 +29,6 @@
         </configuration>
     </toolchain>
     <toolchain>
-        <type>jdk</type>
-        <provides>
-            <version>1.6</version>
-            <vendor>OpenJDK</vendor>
-            <id>openjdk6</id>
-        </provides>
-        <configuration>
-            <jdkHome>C:/Program Files/Java/jdk1.6.0</jdkHome>
-        </configuration>
-    </toolchain>
-    <toolchain>
         <type>protobuf</type>
         <provides>
             <version>3.4.0</version>

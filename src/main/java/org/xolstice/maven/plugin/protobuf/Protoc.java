@@ -258,7 +258,7 @@ final class Protoc {
      * @return A list consisting of the executable followed by any arguments.
      */
     public List<String> buildProtocCommand() {
-        final List<String> command = new ArrayList<String>();
+        final List<String> command = new ArrayList<>();
         // add the executable
         for (final File protoPathElement : protoPathElements) {
             command.add("--proto_path=" + protoPathElement);
@@ -433,7 +433,7 @@ final class Protoc {
      * @return the temporary file wth the arguments
      * @throws IOException
      */
-    private File createFileWithArguments(String[] args) throws IOException {
+    private File createFileWithArguments(String... args) throws IOException {
         PrintWriter writer = null;
         try {
             final File tempFile = File.createTempFile("protoc", null, tempDirectory);
@@ -536,9 +536,9 @@ final class Protoc {
                 throw new MojoConfigurationException("'executable' is null");
             }
             this.executable = executable;
-            protoFiles = new ArrayList<File>();
-            protopathElements = new LinkedHashSet<File>();
-            plugins = new ArrayList<ProtocPlugin>();
+            protoFiles = new ArrayList<>();
+            protopathElements = new LinkedHashSet<>();
+            plugins = new ArrayList<>();
         }
 
         public Builder setTempDirectory(final File tempDirectory) {
@@ -888,7 +888,7 @@ final class Protoc {
             validateState();
             return new Protoc(
                     executable,
-                    new ArrayList<File>(protopathElements),
+                    new ArrayList<>(protopathElements),
                     protoFiles,
                     javaOutputDirectory,
                     javaNanoOutputDirectory,

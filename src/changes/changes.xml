@@ -24,6 +24,9 @@
     <body>
 
         <release version="0.7.0" date="Pending" description="TBD">
+            <action dev="sergei-ivanov" type="update" issue="49">
+                Java 1.8 and Maven 3.3.9 are now minimum required versions for running the plugin.
+            </action>
             <action dev="sergei-ivanov" type="update" issue="47" due-to="Cosmin Lehene (clehene)">
                 More detailed error message.
             </action>

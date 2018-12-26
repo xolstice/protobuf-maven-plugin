@@ -33,7 +33,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- JDK version -->
-        <java.sdk.version>1.6</java.sdk.version>
+        <java.sdk.version>1.8</java.sdk.version>
         <!-- Settings for the java compiler -->
         <java.compiler.compilerVersion>${java.sdk.version}</java.compiler.compilerVersion>
         <java.compiler.source>${java.sdk.version}</java.compiler.source>
@@ -71,7 +71,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>3.1.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>

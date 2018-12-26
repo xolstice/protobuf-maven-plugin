@@ -20,8 +20,9 @@ import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.Os;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Describes a {@code protoc} plugin that is written in Java and
@@ -123,7 +124,7 @@ public class ProtocPlugin {
      * @return a list of command-line arguments.
      */
     public List<String> getArgs() {
-        return (args != null) ? args : Collections.<String>emptyList();
+        return args != null ? args : emptyList();
     }
 
     /**
@@ -132,7 +133,7 @@ public class ProtocPlugin {
      * @return a list of JVM options.
      */
     public List<String> getJvmArgs() {
-        return (jvmArgs != null) ? jvmArgs : Collections.<String>emptyList();
+        return jvmArgs != null ? jvmArgs : emptyList();
     }
 
     public String getJavaHome() {

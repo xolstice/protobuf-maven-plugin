@@ -61,8 +61,8 @@ Usage
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.0</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.8</source>
+          <target>1.8</target>
         </configuration>
       </plugin>
       <plugin>
@@ -99,11 +99,9 @@ Usage
 
   The following conditions need to be met:
 
-  * Java 1.5 or newer is required due to the usage of Generics
+  * Java 1.8 or newer is required for running Maven
 
-  * Java 1.6 or newer is required for running custom Java plugins for protobuf compiler
-
-  * Java 1.7 or newer is recommended
+  * Java 1.8 or newer is required for compiling the generated sources
 
   * Either <<<protoc>>> executable has to be in the <<<PATH>>> or
     the <<<protocExecutable>>> parameter has to be set to the correct location.
@@ -156,7 +154,7 @@ mvn clean install
   Unfortunately, for versions of <<<protoc>>> below 3.5.0, the only available option is to split
   the compilation into smaller chunks by decomposing the project into modules.
 
-* Compiling Protobuf Sources into C++ or Python
+* Compiling Protobuf Sources into other programming languages
 
   The plugin configuration is similar to compiling into Java, with the following alterations:
 
