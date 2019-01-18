@@ -232,7 +232,7 @@ mvn toolchains:toolchain ${goalPrefix}:test-compile
   and <<<--include_imports>>> arguments to <<<protoc>>>.
 
   Generated descriptor sets can optionally be attached to the build as artifacts.
-  The default type and extension for descriptor sets is <<<protobin>>>, and the plugin extensions need
+  The default type and extension for descriptor sets is <<<pb>>>, and the plugin extensions need
   to be enabled in order to support the correct resolution of those dependencies in downstream projects.
 
   The following plugin options configure descriptor set output:
@@ -247,7 +247,7 @@ mvn toolchains:toolchain ${goalPrefix}:test-compile
     if this option is enabled.
 
   * <<<descriptorSetFileName>>> - the file name of the descriptor set; default is the artifact name with
-    the <<<.protobin>>> extension.
+    the <<<.pb>>> extension.
 
   * <<<descriptorSetOutputDirectory>>> - the directory where the descriptor set file will be created
 

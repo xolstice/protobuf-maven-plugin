@@ -20,25 +20,25 @@
     <components>
         <component>
             <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
-            <role-hint>protobin</role-hint>
+            <role-hint>pb</role-hint>
             <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
             <configuration>
-                <extension>protobin</extension>
-                <type>protobin</type>
-                <packaging>protobin</packaging>
+                <extension>pb</extension>
+                <type>pb</type>
+                <packaging>pb</packaging>
                 <language>protobuf</language>
                 <addedToClasspath>false</addedToClasspath>
             </configuration>
         </component>
         <component>
             <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
-            <role-hint>test-protobin</role-hint>
+            <role-hint>test-pb</role-hint>
             <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
             <configuration>
                 <classifier>test</classifier>
-                <extension>protobin</extension>
-                <type>test-protobin</type>
-                <packaging>protobin</packaging>
+                <extension>pb</extension>
+                <type>test-pb</type>
+                <packaging>pb</packaging>
                 <language>protobuf</language>
                 <addedToClasspath>false</addedToClasspath>
             </configuration>

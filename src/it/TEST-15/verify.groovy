@@ -18,7 +18,7 @@ outputDirectory = new File(basedir, 'target/generated-resources/protobuf/descrip
 assert outputDirectory.exists();
 assert outputDirectory.isDirectory();
 
-generatedJavaFile = new File(outputDirectory, 'test-15-1.0.0.protobin');
+generatedJavaFile = new File(outputDirectory, 'test-15-1.0.0.pb');
 assert generatedJavaFile.exists();
 assert generatedJavaFile.isFile();
 

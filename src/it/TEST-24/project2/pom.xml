@@ -46,7 +46,7 @@
                         <configuration>
                             <includeGroupIds>${project.groupId}</includeGroupIds>
                             <includeArtifactIds>test-24-project1</includeArtifactIds>
-                            <includeTypes>protobin</includeTypes>
+                            <includeTypes>pb</includeTypes>
                         </configuration>
                     </execution>
                 </executions>
@@ -59,7 +59,7 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>test-24-project1</artifactId>
             <version>1.0.0</version>
-            <type>protobin</type>
+            <type>pb</type>
         </dependency>
     </dependencies>
 </project>

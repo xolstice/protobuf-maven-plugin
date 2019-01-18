@@ -304,7 +304,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
      */
     @Parameter(
             required = true,
-            defaultValue = "${project.build.finalName}.protobin"
+            defaultValue = "${project.build.finalName}.pb"
     )
     protected String descriptorSetFileName;
 

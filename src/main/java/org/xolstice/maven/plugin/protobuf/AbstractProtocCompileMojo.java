@@ -73,7 +73,7 @@ public abstract class AbstractProtocCompileMojo extends AbstractProtocMojo {
         project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
         if (writeDescriptorSet) {
             final File descriptorSetFile = new File(getDescriptorSetOutputDirectory(), descriptorSetFileName);
-            projectHelper.attachArtifact(project, "protobin", descriptorSetClassifier, descriptorSetFile);
+            projectHelper.attachArtifact(project, "pb", descriptorSetClassifier, descriptorSetFile);
         }
         buildContext.refresh(outputDirectory);
     }
