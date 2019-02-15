@@ -52,6 +52,7 @@ public final class ProtocCompileJavaScriptMojo extends AbstractProtocCompileMojo
 
     /**
      * Additional comma-separated options to be passed to the JavaScript generator.
+     * E.g. import_style=commonjs,binary
      * <b>Cannot</b> contain colon (<tt>:</tt>) symbols.
      */
     @Parameter(
