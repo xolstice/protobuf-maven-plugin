@@ -40,6 +40,7 @@ import org.apache.maven.toolchain.ToolchainManager;
 import org.apache.maven.toolchain.java.DefaultJavaToolChain;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.Os;
+import org.codehaus.plexus.util.SelectorUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.io.RawInputStreamFacade;
@@ -833,8 +834,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
                 while (jarEntries.hasMoreElements()) {
                     final JarEntry jarEntry = jarEntries.nextElement();
                     final String jarEntryName = jarEntry.getName();
-                    // TODO try using org.codehaus.plexus.util.SelectorUtils.matchPath() with DEFAULT_INCLUDES
-                    if (jarEntryName.endsWith(PROTO_FILE_SUFFIX)) {
+                    if (isIncludedFile(jarEntryName)) {
                         final File jarDirectory;
                         try {
                             jarDirectory = new File(temporaryProtoFileDirectory, truncatePath(classpathJar.getName()));
@@ -874,7 +874,23 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         return protoDirectories;
     }
 
-    protected List<File> findProtoFilesInDirectory(final File directory) {
+    /**
+     * Checks if file name matches any include statements
+     * @param fileName: Name of the file being scanned
+     * @return true if it matches any include, false otherwise
+     */
+    private boolean isIncludedFile(String fileName) {
+    	for (int i = 0; i < includes.length; i++) {
+    		String pattern = includes[i];
+    		if (SelectorUtils.matchPath(pattern, fileName)) {
+    			return true;
+    		}
+    	}
+    	
+    	return false;
+    }
+
+	protected List<File> findProtoFilesInDirectory(final File directory) {
         if (directory == null) {
             throw new MojoConfigurationException("'directory' is null");
         }
