@@ -114,9 +114,11 @@ public final class ProtocCompileDescriptorSetMojo extends AbstractProtocCompileM
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     @Override
     protected void doAttachGeneratedFiles() {
-        final File outputDirectory = getOutputDirectory();
-        final File descriptorSetFile = new File(getOutputDirectory(), descriptorSetFileName);
-        projectHelper.attachArtifact(project, "pb", classifier, descriptorSetFile);
-        buildContext.refresh(outputDirectory);
+        if (attach) {
+            final File outputDirectory = getOutputDirectory();
+            final File descriptorSetFile = new File(getOutputDirectory(), descriptorSetFileName);
+            projectHelper.attachArtifact(project, "pb", classifier, descriptorSetFile);
+            buildContext.refresh(outputDirectory);
+        }
     }
 }
