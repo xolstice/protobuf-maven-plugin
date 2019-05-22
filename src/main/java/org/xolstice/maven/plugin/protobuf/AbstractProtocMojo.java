@@ -45,17 +45,23 @@ import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.io.RawInputStreamFacade;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
@@ -393,6 +399,15 @@ abstract class AbstractProtocMojo extends AbstractMojo {
     private boolean clearOutputDirectory;
 
     /**
+     * When {@code true}, the import files of the proto file will be code generation
+     */
+    @Parameter(
+            required = false,
+            defaultValue = "false"
+    )
+    private boolean generateImport;
+
+    /**
      * Executes the mojo.
      */
     @Override
@@ -414,6 +429,13 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         if (protoSourceRoot.exists()) {
             try {
                 final List<File> protoFiles = findProtoFilesInDirectory(protoSourceRoot);
+                if (generateImport) {
+                    getLog().debug("Find: " + protoFiles);
+                    Set<File> importFiles = getDependencyProto(protoFiles, protoSourceRoot);
+                    getLog().debug("IMPORT FILE: " + importFiles);
+                    protoFiles.addAll(importFiles);
+                }
+                getLog().debug("ALL PROTO: "+protoFiles);
                 final File outputDirectory = getOutputDirectory();
                 final List<File> outputFiles = findGeneratedFilesInDirectory(getOutputDirectory());
 
@@ -521,10 +543,47 @@ abstract class AbstractProtocMojo extends AbstractMojo {
             } catch (final InterruptedException e) {
                 getLog().info("Process interrupted");
             }
+            catch (Exception e){
+                getLog().error(e.getMessage(), e);
+            }
         } else {
             getLog().info(format("%s does not exist. Review the configuration or consider disabling the plugin.",
                     protoSourceRoot));
         }
+    }
+
+    private Set<File> getDependencyProto(List<File> protoFiles, File protoSourceRoot) throws IOException{
+        Set<File> files = new HashSet<>();
+        for (File file : protoFiles) {
+            Set<File> findFiles = findImportProto(file, protoSourceRoot);
+            if (findFiles != null && findFiles.size() > 0){
+                files.addAll(findFiles);
+            }
+        }
+        return files;
+    }
+    private final Pattern PATTERN_IMPORT = Pattern.compile("^\\s*import\\s+?\"\\s*([^\"]+)\"\\s*;");
+    private Set<File> findImportProto(File file, File protoSourceRoot) throws IOException {
+        Set<File> protoFiles = new HashSet<>();
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = PATTERN_IMPORT.matcher(line);
+                if (matcher.find()) {
+                    String protoFile = matcher.group(1);
+                    File fileProto = new File(protoSourceRoot, protoFile);
+                    if (!fileProto.exists()){
+                        getLog().error("NO FIND IMPORT FILE: "+fileProto.getAbsolutePath());
+                    }
+                    else {
+                        protoFiles.add(fileProto);
+                        Set<File> findFiles = findImportProto(fileProto, protoSourceRoot);
+                        protoFiles.addAll(findFiles);
+                    }
+                }
+            }
+        }
+        return protoFiles;
     }
 
     /**
