@@ -408,6 +408,15 @@ abstract class AbstractProtocMojo extends AbstractMojo {
     private boolean generateImport;
 
     /**
+     *
+     */
+    @Parameter(
+            required = false,
+            defaultValue = "com.google"
+    )
+    private List<String>skipPackages;
+
+    /**
      * Executes the mojo.
      */
     @Override
@@ -576,14 +585,36 @@ abstract class AbstractProtocMojo extends AbstractMojo {
                         getLog().error("NO FIND IMPORT FILE: "+fileProto.getAbsolutePath());
                     }
                     else {
-                        protoFiles.add(fileProto);
-                        Set<File> findFiles = findImportProto(fileProto, protoSourceRoot);
-                        protoFiles.addAll(findFiles);
+                        if (checkProtoFile(fileProto)) {
+                            protoFiles.add(fileProto);
+                            Set<File> findFiles = findImportProto(fileProto, protoSourceRoot);
+                            protoFiles.addAll(findFiles);
+                        }
                     }
                 }
             }
         }
         return protoFiles;
+    }
+
+    private final Pattern PATTERN_JAVA_IMPORT = Pattern.compile("^\\s*option\\s+?java_package\\s*=\\s*\"([^\"]+)\"\\s*;");
+    protected boolean checkProtoFile(File fileProto) throws IOException {
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(fileProto)));) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = PATTERN_JAVA_IMPORT.matcher(line);
+                if (matcher.find()){
+                    String javaPackage = matcher.group(1);
+                    getLog().debug("skipPackages: "+skipPackages+"   VS.  "+javaPackage);
+                    for (String pkg : skipPackages) {
+                        if (javaPackage.startsWith(pkg)){
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     /**
