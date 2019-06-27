@@ -437,12 +437,13 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         final File protoSourceRoot = getProtoSourceRoot();
         if (protoSourceRoot.exists()) {
             try {
-                final List<File> protoFiles = findProtoFilesInDirectory(protoSourceRoot);
+                List<File> protoFiles = findProtoFilesInDirectory(protoSourceRoot);
                 if (generateImport) {
                     getLog().debug("Find: " + protoFiles);
                     Set<File> importFiles = getDependencyProto(protoFiles, protoSourceRoot);
                     getLog().debug("IMPORT FILE: " + importFiles);
-                    protoFiles.addAll(importFiles);
+                    importFiles.addAll(new HashSet<>(protoFiles));
+                    protoFiles=new ArrayList<>(importFiles);
                 }
                 getLog().debug("ALL PROTO: "+protoFiles);
                 final File outputDirectory = getOutputDirectory();
