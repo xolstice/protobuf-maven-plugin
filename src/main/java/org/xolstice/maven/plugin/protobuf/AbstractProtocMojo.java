@@ -62,6 +62,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
@@ -412,9 +413,9 @@ abstract class AbstractProtocMojo extends AbstractMojo {
      */
     @Parameter(
             required = false,
-            defaultValue = "com.google"
+            defaultValue = "any.proto,descriptor.proto,empty.proto,struct.proto"
     )
-    private List<String>skipPackages;
+    private List<String>skipFiles;
 
     /**
      * Executes the mojo.
@@ -438,6 +439,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         if (protoSourceRoot.exists()) {
             try {
                 List<File> protoFiles = findProtoFilesInDirectory(protoSourceRoot);
+                protoFiles = protoFiles.stream().filter(f -> checkProtoFile(f)).collect(Collectors.toList());
                 if (generateImport) {
                     getLog().debug("Find: " + protoFiles);
                     Set<File> importFiles = getDependencyProto(protoFiles, protoSourceRoot);
@@ -598,21 +600,11 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         return protoFiles;
     }
 
-    private final Pattern PATTERN_JAVA_IMPORT = Pattern.compile("^\\s*option\\s+?java_package\\s*=\\s*\"([^\"]+)\"\\s*;");
-    protected boolean checkProtoFile(File fileProto) throws IOException {
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(fileProto)));) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                Matcher matcher = PATTERN_JAVA_IMPORT.matcher(line);
-                if (matcher.find()){
-                    String javaPackage = matcher.group(1);
-                    getLog().debug("skipPackages: "+skipPackages+"   VS.  "+javaPackage);
-                    for (String pkg : skipPackages) {
-                        if (javaPackage.startsWith(pkg)){
-                            return false;
-                        }
-                    }
-                }
+    protected boolean checkProtoFile(File fileProto) {
+        for (String file : skipFiles) {
+            if (fileProto.getAbsolutePath().endsWith(file)){
+                getLog().debug("skipping the file: "+fileProto.getAbsolutePath()+", because skipped file is "+file);
+                return false;
             }
         }
         return true;
