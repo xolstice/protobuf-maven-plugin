@@ -413,7 +413,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
      */
     @Parameter(
             required = false,
-            defaultValue = "any.proto,descriptor.proto,empty.proto,struct.proto"
+            defaultValue = ""
     )
     private List<String>skipFiles;
 
@@ -601,10 +601,12 @@ abstract class AbstractProtocMojo extends AbstractMojo {
     }
 
     protected boolean checkProtoFile(File fileProto) {
-        for (String file : skipFiles) {
-            if (fileProto.getAbsolutePath().endsWith(file)){
-                getLog().debug("skipping the file: "+fileProto.getAbsolutePath()+", because skipped file is "+file);
-                return false;
+        if (skipFiles != null && skipFiles.size() > 0) {
+            for (String file : skipFiles) {
+                if (fileProto.getAbsolutePath().endsWith(file)) {
+                    getLog().debug("skipping the file: " + fileProto.getAbsolutePath() + ", because skipped file is " + file);
+                    return false;
+                }
             }
         }
         return true;
