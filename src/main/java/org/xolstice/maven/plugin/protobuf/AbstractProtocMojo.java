@@ -540,16 +540,23 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         final String javaHome = detectJavaHome();
 
         for (final ProtocPlugin plugin : protocPlugins) {
-
-            if (plugin.getJavaHome() != null) {
-                getLog().debug("Using javaHome defined in plugin definition: " + plugin.getJavaHome());
-            } else {
-                getLog().debug("Setting javaHome for plugin: " + javaHome);
-                plugin.setJavaHome(javaHome);
-            }
-
             getLog().info("Building protoc plugin: " + plugin.getId());
-            final ProtocPluginAssembler assembler = new ProtocPluginAssembler(
+
+            if (plugin.getMainClass() == null) {
+                final Artifact pluginArtifact = createDependencyArtifact(plugin.getGroupId(), plugin.getArtifactId(),
+                    plugin.getVersion(), plugin.getType(), plugin.getClassifier());
+                final File file = resolveBinaryArtifact(pluginArtifact);
+                getLog().debug("Setting executableFile for plugin: " + file.getAbsolutePath());
+                plugin.setExecutableFile(file);
+            } else {
+                if (plugin.getJavaHome() != null) {
+                    getLog().debug("Using javaHome defined in plugin definition: " + plugin.getJavaHome());
+                } else {
+                    getLog().debug("Setting javaHome for plugin: " + javaHome);
+                    plugin.setJavaHome(javaHome);
+                }
+
+                final ProtocPluginAssembler assembler = new ProtocPluginAssembler(
                     plugin,
                     session,
                     project.getArtifact(),
@@ -560,7 +567,8 @@ abstract class AbstractProtocMojo extends AbstractMojo {
                     remoteRepositories,
                     protocPluginDirectory,
                     getLog());
-            assembler.execute();
+                assembler.execute();
+            }
         }
     }
 

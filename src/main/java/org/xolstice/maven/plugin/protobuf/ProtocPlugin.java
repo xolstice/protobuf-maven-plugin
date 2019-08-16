@@ -48,6 +48,8 @@ public class ProtocPlugin {
 
     private String version;
 
+    private String type;
+
     private String classifier;
 
     private String mainClass;
@@ -62,6 +64,8 @@ public class ProtocPlugin {
     private List<String> args;
 
     private List<String> jvmArgs;
+
+    private File executableFile;
 
     /**
      * Returns the unique id for this plugin.
@@ -98,6 +102,15 @@ public class ProtocPlugin {
      */
     public String getVersion() {
         return version;
+    }
+
+    /**
+     * Returns an optional type of the plugin's artifact for dependency resolution.
+     *
+     * @return the plugin's artifact type.
+     */
+    public String getType() {
+        return type;
     }
 
     /**
@@ -152,6 +165,10 @@ public class ProtocPlugin {
         return "protoc-gen-" + id;
     }
 
+    public void setExecutableFile(final File executableFile) {
+        this.executableFile = executableFile;
+    }
+
     /**
      * Validate the state of this plugin specification.
      *
@@ -169,9 +186,6 @@ public class ProtocPlugin {
         }
         if (version == null) {
             throw new MojoConfigurationException("version must be set in protocPlugin definition");
-        }
-        if (mainClass == null) {
-            throw new MojoConfigurationException("mainClass must be set in protocPlugin definition");
         }
         if (javaHome == null || !new File(javaHome).isDirectory()) {
             throw new MojoConfigurationException("javaHome is invalid: " + javaHome);
@@ -223,10 +237,14 @@ public class ProtocPlugin {
      * @return file handle for the plugin executable.
      */
     public File getPluginExecutableFile(final File pluginDirectory) {
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return new File(pluginDirectory, getPluginName() + ".exe");
+        if (executableFile != null) {
+            return executableFile;
         } else {
-            return new File(pluginDirectory, getPluginName());
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                return new File(pluginDirectory, getPluginName() + ".exe");
+            } else {
+                return new File(pluginDirectory, getPluginName());
+            }
         }
     }
 
@@ -237,12 +255,14 @@ public class ProtocPlugin {
                 ", groupId='" + groupId + '\'' +
                 ", artifactId='" + artifactId + '\'' +
                 ", version='" + version + '\'' +
+                ", type='" + type + '\'' +
                 ", classifier='" + classifier + '\'' +
                 ", mainClass='" + mainClass + '\'' +
                 ", javaHome='" + javaHome + '\'' +
                 ", winJvmDataModel='" + winJvmDataModel + '\'' +
                 ", args=" + args +
                 ", jvmArgs=" + jvmArgs +
+                ", executableFile=" + executableFile +
                 '}';
     }
 }

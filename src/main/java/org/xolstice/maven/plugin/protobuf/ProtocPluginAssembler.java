@@ -258,7 +258,7 @@ public class ProtocPluginAssembler {
                         pluginDefinition.getGroupId(),
                         pluginDefinition.getArtifactId(),
                         versionSpec,
-                        "jar",
+                        pluginDefinition.getType() != null ? pluginDefinition.getType() : "jar",
                         pluginDefinition.getClassifier(),
                         Artifact.SCOPE_RUNTIME);
 
