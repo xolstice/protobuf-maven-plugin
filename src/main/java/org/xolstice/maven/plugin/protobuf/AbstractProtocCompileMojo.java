@@ -62,4 +62,5 @@ public abstract class AbstractProtocCompileMojo extends AbstractProtocMojo {
     protected File getProtoSourceRoot() {
         return protoSourceRoot;
     }
+
 }

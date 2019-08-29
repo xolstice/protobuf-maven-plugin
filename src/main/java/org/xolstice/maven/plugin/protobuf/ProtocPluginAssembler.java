@@ -66,11 +66,7 @@ public class ProtocPluginAssembler {
 
     private final List<ArtifactRepository> remoteRepositories;
 
-    private final File pluginDirectory;
-
     private final List<File> resolvedJars = new ArrayList<>();
-
-    private final File pluginExecutableFile;
 
     private final Log log;
 
@@ -83,7 +79,6 @@ public class ProtocPluginAssembler {
             final ResolutionErrorHandler resolutionErrorHandler,
             final ArtifactRepository localRepository,
             final List<ArtifactRepository> remoteRepositories,
-            final File pluginDirectory,
             final Log log) {
         this.pluginDefinition = pluginDefinition;
         this.session = session;
@@ -93,34 +88,35 @@ public class ProtocPluginAssembler {
         this.resolutionErrorHandler = resolutionErrorHandler;
         this.localRepository = localRepository;
         this.remoteRepositories = remoteRepositories;
-        this.pluginDirectory = pluginDirectory;
-        this.pluginExecutableFile = pluginDefinition.getPluginExecutableFile(pluginDirectory);
         this.log = log;
     }
 
     /**
      * Resolves the plugin's dependencies to the local Maven repository and builds the plugin executable.
      */
-    public void execute() {
+    public void execute(File destinationFile) {
         pluginDefinition.validate(log);
 
         if (log.isDebugEnabled()) {
             log.debug("plugin definition: " + pluginDefinition);
         }
 
+        if(!"jar".equalsIgnoreCase(pluginDefinition.getType())) {
+            throw new MojoInitializationException("Cannot create a wrapper executable for a plugin of type " + pluginDefinition.getType());
+        }
+        if(pluginDefinition.getMainClass() == null) {
+            throw new MojoInitializationException("Wrapped java plugins must specify a main class.");
+        }
         resolvePluginDependencies();
 
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            buildWindowsPlugin();
-            copyWinRun4JExecutable();
+            buildWindowsPlugin(destinationFile);
         } else {
-            buildUnixPlugin();
-            pluginExecutableFile.setExecutable(true);
+            buildUnixPlugin(destinationFile);
         }
     }
 
-    private void buildWindowsPlugin() {
-        createPluginDirectory();
+    private void buildWindowsPlugin(File destinationFile) {
 
         // Try to locate jvm.dll based on pluginDefinition's javaHome property
         final File javaHome = new File(pluginDefinition.getJavaHome());
@@ -129,7 +125,7 @@ public class ProtocPluginAssembler {
                 "bin/server/jvm.dll",
                 "jre/bin/client/jvm.dll",
                 "bin/client/jvm.dll");
-        final File winRun4JIniFile = new File(pluginDirectory, pluginDefinition.getPluginName() + ".ini");
+        final File winRun4JIniFile = new File(destinationFile.getParentFile(), pluginDefinition.getPluginName() + ".ini");
 
         if (log.isDebugEnabled()) {
             log.debug("javaHome=" + javaHome.getAbsolutePath());
@@ -171,43 +167,29 @@ public class ProtocPluginAssembler {
             throw new MojoInitializationException(
                     "Could not write WinRun4J ini file: " + winRun4JIniFile.getAbsolutePath(), e);
         }
-    }
 
-    private static File findJvmLocation(final File javaHome, final String... paths) {
-        for (final String path : paths) {
-            final File jvmLocation = new File(javaHome, path);
-            if (jvmLocation.isFile()) {
-                return jvmLocation;
-            }
-        }
-        return null;
-    }
-
-    private void copyWinRun4JExecutable() {
         final String executablePath = getWinrun4jExecutablePath();
         final URL url = Thread.currentThread().getContextClassLoader().getResource(executablePath);
         if (url == null) {
             throw new MojoInitializationException(
-                    "Could not locate WinRun4J executable at path: " + executablePath);
+                "Could not locate WinRun4J executable at path: " + executablePath);
         }
         try {
-            FileUtils.copyURLToFile(url, pluginExecutableFile);
+            FileUtils.copyURLToFile(url, destinationFile);
         } catch (IOException e) {
             throw new MojoInitializationException(
-                    "Could not copy WinRun4J executable to: " + pluginExecutableFile.getAbsolutePath(), e);
+                "Could not copy WinRun4J executable to: " + destinationFile.getAbsolutePath(), e);
         }
     }
 
-    private void buildUnixPlugin() {
-        createPluginDirectory();
-
+    private void buildUnixPlugin(File destinationFile) {
         final File javaLocation = new File(pluginDefinition.getJavaHome(), "bin/java");
 
         if (log.isDebugEnabled()) {
             log.debug("javaLocation=" + javaLocation.getAbsolutePath());
         }
 
-        try (final PrintWriter out = new PrintWriter(new FileWriter(pluginExecutableFile))) {
+        try (final PrintWriter out = new PrintWriter(new FileWriter(destinationFile))) {
             out.println("#!/bin/sh");
             out.println();
             out.print("CP=");
@@ -230,21 +212,23 @@ public class ProtocPluginAssembler {
             out.println("\"");
             out.println();
             out.println("\"" + javaLocation.getAbsolutePath() + "\" $JVMARGS -cp $CP "
-                    + pluginDefinition.getMainClass() + " $ARGS");
+                + pluginDefinition.getMainClass() + " $ARGS");
             out.println();
         } catch (IOException e) {
-            throw new MojoInitializationException("Could not write plugin script file: " + pluginExecutableFile, e);
+            throw new MojoInitializationException("Could not write plugin script file: " + destinationFile, e);
         }
+        destinationFile.setExecutable(true);
     }
 
-    private void createPluginDirectory() {
-        pluginDirectory.mkdirs();
-        if (!pluginDirectory.isDirectory()) {
-            throw new MojoInitializationException("Could not create protoc plugin directory: "
-                    + pluginDirectory.getAbsolutePath());
+    private static File findJvmLocation(final File javaHome, final String... paths) {
+        for (final String path : paths) {
+            final File jvmLocation = new File(javaHome, path);
+            if (jvmLocation.isFile()) {
+                return jvmLocation;
+            }
         }
+        return null;
     }
-
     private void resolvePluginDependencies() {
 
         final VersionRange versionSpec;

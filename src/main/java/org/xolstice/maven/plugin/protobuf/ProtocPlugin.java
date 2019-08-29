@@ -17,6 +17,7 @@ package org.xolstice.maven.plugin.protobuf;
  */
 
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.Os;
 
 import java.io.File;
@@ -48,9 +49,13 @@ public class ProtocPlugin {
 
     private String version;
 
+    private String type = "jar";
+
     private String classifier;
 
     private String mainClass;
+
+    private String parameter;
 
     private String javaHome;
 
@@ -58,6 +63,11 @@ public class ProtocPlugin {
     // current JVM as the default. This property is only relevant on
     // Windows where we need to pick the right version of the WinRun4J executable.
     private String winJvmDataModel;
+
+    @Parameter(
+        required = false
+    )
+    private File outputDirectory;
 
     private List<String> args;
 
@@ -101,6 +111,13 @@ public class ProtocPlugin {
     }
 
     /**
+     * The type of the artifact (eg. 'exe' or 'jar').
+     *
+     * @return the plugin artifact type
+     */
+    public String getType() { return type; }
+
+    /**
      * Returns an optional classifier of the plugin's artifact for dependency resolution.
      *
      * @return the plugin's artifact classifier.
@@ -117,6 +134,13 @@ public class ProtocPlugin {
     public String getMainClass() {
         return mainClass;
     }
+
+    /**
+     * Returns the plugin's argument to be passed to protoc.
+     *
+     * @return protoc argument
+     */
+    public String getParameter() { return parameter; }
 
     /**
      * Returns optional command line arguments to pass to the {@code main()} method.
@@ -150,6 +174,14 @@ public class ProtocPlugin {
 
     public String getPluginName() {
         return "protoc-gen-" + id;
+    }
+
+    public void setOutputDirectory(File outputDirectory) {
+        this.outputDirectory = outputDirectory;
+    }
+
+    public File getOutputDirectory() {
+        return outputDirectory;
     }
 
     /**
@@ -217,16 +249,19 @@ public class ProtocPlugin {
     }
 
     /**
-     * Returns the generated plugin executable path.
+     * Returns the generated plugin executable name.
      *
-     * @param pluginDirectory directory where plugins will be created
-     * @return file handle for the plugin executable.
      */
-    public File getPluginExecutableFile(final File pluginDirectory) {
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return new File(pluginDirectory, getPluginName() + ".exe");
+    public String getPluginExecutableName() {
+        if("jar".equalsIgnoreCase(type) && mainClass == null) {
+            //this is an uberjar plugin
+            return getPluginName() + ".jar";
         } else {
-            return new File(pluginDirectory, getPluginName());
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                return getPluginName() + ".exe";
+            } else {
+                return getPluginName();
+            }
         }
     }
 
@@ -237,8 +272,10 @@ public class ProtocPlugin {
                 ", groupId='" + groupId + '\'' +
                 ", artifactId='" + artifactId + '\'' +
                 ", version='" + version + '\'' +
+                ", type='" + type + '\'' +
                 ", classifier='" + classifier + '\'' +
                 ", mainClass='" + mainClass + '\'' +
+                ", parameter='" + parameter + '\'' +
                 ", javaHome='" + javaHome + '\'' +
                 ", winJvmDataModel='" + winJvmDataModel + '\'' +
                 ", args=" + args +

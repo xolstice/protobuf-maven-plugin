@@ -262,13 +262,6 @@ final class Protoc {
             }
             outputOption += javaOutputDirectory;
             command.add(outputOption);
-
-            // For now we assume all custom plugins produce Java output
-            for (final ProtocPlugin plugin : plugins) {
-                final File pluginExecutable = plugin.getPluginExecutableFile(pluginDirectory);
-                command.add("--plugin=protoc-gen-" + plugin.getId() + '=' + pluginExecutable);
-                command.add("--" + plugin.getId() + "_out=" + javaOutputDirectory);
-            }
         }
         if (cppOutputDirectory != null) {
             command.add("--cpp_out=" + cppOutputDirectory);
@@ -298,6 +291,16 @@ final class Protoc {
             }
             outputOption += customOutputDirectory;
             command.add(outputOption);
+        }
+        for (final ProtocPlugin plugin : plugins) {
+            final File pluginExecutable = new File(pluginDirectory, plugin.getPluginExecutableName());
+            command.add("--plugin=protoc-gen-" + plugin.getId() + '=' + pluginExecutable);
+            String pluginOutOption = "--" + plugin.getId() + "_out=";
+            if(plugin.getParameter() != null) {
+                pluginOutOption += plugin.getParameter() + ':';
+            }
+            pluginOutOption += plugin.getOutputDirectory();
+            command.add(pluginOutOption);
         }
         for (final File protoFile : protoFiles) {
             command.add(protoFile.toString());

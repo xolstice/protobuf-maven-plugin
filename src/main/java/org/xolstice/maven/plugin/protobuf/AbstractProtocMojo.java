@@ -428,17 +428,22 @@ abstract class AbstractProtocMojo extends AbstractMojo {
                 } else {
                     final List<File> derivedProtoPathElements =
                             makeProtoPathFromJars(temporaryProtoFileDirectory, getDependencyArtifactFiles());
+
                     FileUtils.mkdir(outputDirectory.getAbsolutePath());
+                    createProtocPlugins();
 
                     if (clearOutputDirectory) {
                         try {
                             cleanDirectory(outputDirectory);
+                            if(protocPlugins != null) {
+                                for(ProtocPlugin plugin : protocPlugins) {
+                                    cleanDirectory(plugin.getOutputDirectory());
+                                }
+                            }
                         } catch (final IOException e) {
                             throw new MojoInitializationException("Unable to clean output directory", e);
                         }
                     }
-
-                    createProtocPlugins();
 
                     //get toolchain from context
                     final Toolchain tc = toolchainManager.getToolchainFromBuildContext("protobuf", session); //NOI18N
@@ -541,15 +546,35 @@ abstract class AbstractProtocMojo extends AbstractMojo {
 
         for (final ProtocPlugin plugin : protocPlugins) {
 
-            if (plugin.getJavaHome() != null) {
-                getLog().debug("Using javaHome defined in plugin definition: " + plugin.getJavaHome());
-            } else {
-                getLog().debug("Setting javaHome for plugin: " + javaHome);
-                plugin.setJavaHome(javaHome);
+            String pluginid = plugin.getId();
+
+            if (pluginid.equals("java")
+                || pluginid.equals("js")
+                || pluginid.equals("python")
+                || pluginid.equals("csharp")
+                || pluginid.equals("cpp")
+                || pluginid.equals("descriptor_set")) {
+                throw new MojoConfigurationException("custom plugin ID matches one of the built-in protoc plugins: " + pluginid);
             }
 
-            getLog().info("Building protoc plugin: " + plugin.getId());
-            final ProtocPluginAssembler assembler = new ProtocPluginAssembler(
+            File pluginOutputDir = plugin.getOutputDirectory();
+            if(pluginOutputDir == null) {
+                plugin.setOutputDirectory(getOutputDirectory());
+            } else {
+                FileUtils.mkdir(pluginOutputDir.getAbsolutePath());
+            }
+
+            if(plugin.getType().equalsIgnoreCase("jar") && plugin.getMainClass() != null) {
+                //we need to generate an executable wrapper for this plugin
+                if (plugin.getJavaHome() != null) {
+                    getLog().debug("Using javaHome defined in plugin definition: " + plugin.getJavaHome());
+                } else {
+                    getLog().debug("Setting javaHome for plugin: " + javaHome);
+                    plugin.setJavaHome(javaHome);
+                }
+
+                getLog().info("Building protoc plugin: " + plugin.getId());
+                final ProtocPluginAssembler assembler = new ProtocPluginAssembler(
                     plugin,
                     session,
                     project.getArtifact(),
@@ -558,9 +583,23 @@ abstract class AbstractProtocMojo extends AbstractMojo {
                     resolutionErrorHandler,
                     localRepository,
                     remoteRepositories,
-                    protocPluginDirectory,
                     getLog());
-            assembler.execute();
+                File destinationFile = new File(protocPluginDirectory, plugin.getPluginExecutableName());
+                assembler.execute(destinationFile);
+
+            } else {
+                //it's a native plugin - just resolve and download it
+                final Artifact artifact = createDependencyArtifact(
+                    plugin.getGroupId(),
+                    plugin.getArtifactId(),
+                    plugin.getVersion(),
+                    plugin.getType(),
+                    plugin.getClassifier()
+                );
+                File sourceFile = resolveArtifact(artifact);
+                copyToPluginDir(sourceFile, plugin.getPluginExecutableName());
+            }
+
         }
     }
 
@@ -956,7 +995,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         return hexString.toString();
     }
 
-    protected File resolveBinaryArtifact(final Artifact artifact) {
+    protected File resolveArtifact(Artifact artifact) {
         final ArtifactResolutionResult result;
         final ArtifactResolutionRequest request = new ArtifactResolutionRequest()
                 .setArtifact(project.getArtifact())
@@ -992,14 +1031,10 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         }
 
         // Copy the file to the project build directory and make it executable
-        final File sourceFile = resolvedBinaryArtifact.getFile();
-        final String sourceFileName = sourceFile.getName();
-        final String targetFileName;
-        if (Os.isFamily(Os.FAMILY_WINDOWS) && !sourceFileName.endsWith(".exe")) {
-            targetFileName = sourceFileName + ".exe";
-        } else {
-            targetFileName = sourceFileName;
-        }
+        return resolvedBinaryArtifact.getFile();
+    }
+
+    protected File copyToPluginDir(File sourceFile, String targetFileName) {
         final File targetFile = new File(protocPluginDirectory, targetFileName);
         if (targetFile.exists()) {
             // The file must have already been copied in a prior plugin execution/invocation
@@ -1024,6 +1059,19 @@ abstract class AbstractProtocMojo extends AbstractMojo {
             getLog().debug("Executable file: " + targetFile.getAbsolutePath());
         }
         return targetFile;
+    }
+
+    protected File resolveBinaryArtifact(final Artifact artifact) {
+        // Copy the file to the project build directory and make it executable
+        final File sourceFile = resolveArtifact(artifact);
+        final String sourceFileName = sourceFile.getName();
+        final String targetFileName;
+        if (Os.isFamily(Os.FAMILY_WINDOWS) && !sourceFileName.endsWith(".exe")) {
+            targetFileName = sourceFileName + ".exe";
+        } else {
+            targetFileName = sourceFileName;
+        }
+        return copyToPluginDir(sourceFile, targetFileName);
     }
 
     /**
