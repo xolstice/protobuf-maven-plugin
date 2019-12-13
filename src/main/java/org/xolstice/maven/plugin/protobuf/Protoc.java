@@ -256,7 +256,12 @@ final class Protoc {
             command.add("--proto_path=" + protoPathElement);
         }
         if (javaOutputDirectory != null) {
-            command.add("--java_out=" + javaOutputDirectory);
+            String outputOption = "--java_out=";
+            if (nativePluginParameter != null) {
+                outputOption += nativePluginParameter + ':';
+            }
+            outputOption += javaOutputDirectory;
+            command.add(outputOption);
 
             // For now we assume all custom plugins produce Java output
             for (final ProtocPlugin plugin : plugins) {

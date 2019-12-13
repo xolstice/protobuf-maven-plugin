@@ -47,13 +47,27 @@ public final class ProtocCompileMojo extends AbstractProtocCompileMojo {
             defaultValue = "${project.build.directory}/generated-sources/protobuf/java"
     )
     private File outputDirectory;
+    
+    
+    /**
+     * Additional comma-separated options to be passed to the Java generator.
+     * <b>Cannot</b> contain colon (<tt>:</tt>) symbols.
+     */
+    @Parameter(
+            required = false,
+            property = "javaOptions"
+    )
+    private String javaOptions;
 
     @Override
     protected void addProtocBuilderParameters(final Protoc.Builder protocBuilder) {
         super.addProtocBuilderParameters(protocBuilder);
+        if (javaOptions != null) {
+            protocBuilder.setNativePluginParameter(javaOptions);
+        }
         protocBuilder.setJavaOutputDirectory(getOutputDirectory());
     }
-
+    
     @Override
     protected File getOutputDirectory() {
         return outputDirectory;

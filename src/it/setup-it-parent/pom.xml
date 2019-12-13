@@ -41,7 +41,8 @@
 
         <mavenVersion>3.3.9</mavenVersion>
 
-        <protobufVersion>3.6.1</protobufVersion>
+        <protobufVersion>3.9.1</protobufVersion>
+        <protobufJavaArtifact>protobuf-java</protobufJavaArtifact>
     </properties>
 
     <build>
@@ -163,7 +164,7 @@
     <dependencies>
         <dependency>
             <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
+            <artifactId>${protobufJavaArtifact}</artifactId>
             <version>${protobufVersion}</version>
         </dependency>
         <!-- Test dependencies -->
