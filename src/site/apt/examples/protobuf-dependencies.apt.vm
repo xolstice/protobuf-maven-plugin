@@ -75,7 +75,7 @@ import "it/project1/test1.proto";
 <project>
   ...
   <properties>
-    <protobufVersion>3.6.1</protobufVersion>
+    <protobufVersion>3.11.1</protobufVersion>
     <grpcVersion>1.7.0</grpcVersion>
   </properties>
   ...

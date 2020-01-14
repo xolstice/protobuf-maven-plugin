@@ -48,10 +48,10 @@ public final class ProtocCompileMojo extends AbstractProtocCompileMojo {
     )
     private File outputDirectory;
     
-    
     /**
      * Additional comma-separated options to be passed to the Java generator.
      * <b>Cannot</b> contain colon (<tt>:</tt>) symbols.
+     * @since 0.7.0
      */
     @Parameter(
             required = false,

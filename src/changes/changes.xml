@@ -24,6 +24,9 @@
     <body>
 
         <release version="0.7.0" date="Pending" description="TBD">
+            <action dev="henryju" type="add" issue="64" due-to="Julien Henry (henryju)">
+                Support passing options to the Java compiler.
+            </action>
             <action dev="sergei-ivanov" type="update" issue="57" due-to="David Reichert (davidmreichert)">
                 Allowed more flexibility in specifying input proto files.
                 Versioned file extensions (e.g. .proto2, .proto3) can be used.

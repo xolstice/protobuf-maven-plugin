@@ -13,13 +13,13 @@ before_install:
 install:
   # Download all dependencies that integration tests might need later
   - ./mvnw -B -V -Dstyle.color=always dependency:go-offline -f src/it/dependencies/pom.xml -P protoc-3.4.0
-  - ./mvnw -B -V -Dstyle.color=always dependency:go-offline -f src/it/dependencies/pom.xml -P protoc-3.6.1
+  - ./mvnw -B -V -Dstyle.color=always dependency:go-offline -f src/it/dependencies/pom.xml -P protoc-3.11.1
   - ./mvnw -B -V -Dstyle.color=always dependency:go-offline -P run-its
 
 before_script:
   # These protoc executables were downloaded in the previous phase and are being referenced in toolchains.xml
   - chmod +x $HOME/.m2/repository/com/google/protobuf/protoc/3.4.0/protoc-3.4.0-linux-x86_64.exe
-  - chmod +x $HOME/.m2/repository/com/google/protobuf/protoc/3.6.1/protoc-3.6.1-linux-x86_64.exe
+  - chmod +x $HOME/.m2/repository/com/google/protobuf/protoc/3.11.1/protoc-3.11.1-linux-x86_64.exe
 
 script:
   # Finally, run the build with integration tests

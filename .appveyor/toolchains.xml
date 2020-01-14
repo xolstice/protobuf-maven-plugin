@@ -42,11 +42,11 @@
     <toolchain>
         <type>protobuf</type>
         <provides>
-            <version>3.6.1</version>
+            <version>3.11.1</version>
         </provides>
         <configuration>
             <protocExecutable>
-                C:/Users/appveyor/.m2/repository/com/google/protobuf/protoc/3.6.1/protoc-3.6.1-windows-x86_64.exe
+                C:/Users/appveyor/.m2/repository/com/google/protobuf/protoc/3.11.1/protoc-3.11.1-windows-x86_64.exe
             </protocExecutable>
         </configuration>
     </toolchain>

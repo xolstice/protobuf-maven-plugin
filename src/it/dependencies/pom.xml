@@ -172,10 +172,10 @@
         </profile>
 
         <profile>
-            <id>protoc-3.6.1</id>
+            <id>protoc-3.11.1</id>
 
             <properties>
-                <protobufVersion>3.6.1</protobufVersion>
+                <protobufVersion>3.11.1</protobufVersion>
             </properties>
 
             <dependencies>

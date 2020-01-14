@@ -49,10 +49,24 @@ public final class ProtocTestCompileMojo extends AbstractProtocTestCompileMojo {
             defaultValue = "${project.build.directory}/generated-test-sources/protobuf/java"
     )
     private File outputDirectory;
+    
+    /**
+     * Additional comma-separated options to be passed to the Java generator.
+     * <b>Cannot</b> contain colon (<tt>:</tt>) symbols.
+     * @since 0.7.0
+     */
+    @Parameter(
+            required = false,
+            property = "javaOptions"
+    )
+    private String javaOptions;
 
     @Override
     protected void addProtocBuilderParameters(final Protoc.Builder protocBuilder) {
         super.addProtocBuilderParameters(protocBuilder);
+        if (javaOptions != null) {
+          protocBuilder.setNativePluginParameter(javaOptions);
+        }
         protocBuilder.setJavaOutputDirectory(getOutputDirectory());
         // We need to add project output directory to the protobuf import paths,
         // in case test protobuf definitions extend or depend on production ones
