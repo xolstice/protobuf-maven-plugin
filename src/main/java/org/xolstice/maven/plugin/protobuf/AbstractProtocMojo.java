@@ -313,6 +313,19 @@ abstract class AbstractProtocMojo extends AbstractMojo {
     protected boolean useArgumentFile;
 
     /**
+     * If set to {@code true}, experimental optional feature will be enabled.
+     *
+     * <p><b>NOTE:</b> This is only supported for protoc 3.12.0 and higher.</p>
+     *
+     * @since 0.7.0
+     */
+    @Parameter(
+            required = false,
+            defaultValue = "false"
+    )
+    protected boolean useExperimentalOptional;
+
+    /**
      * Specifies one of more custom protoc plugins, written in Java
      * and available as Maven artifacts. An executable plugin will be created
      * at execution time. On UNIX the executable is a shell script and on
@@ -623,6 +636,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         }
         protocBuilder.setTempDirectory(tempDirectory);
         protocBuilder.useArgumentFile(useArgumentFile);
+        protocBuilder.useExperimentalOptional(useExperimentalOptional);
     }
 
     /**

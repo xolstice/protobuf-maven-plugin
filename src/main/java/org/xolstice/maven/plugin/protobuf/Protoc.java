@@ -125,6 +125,11 @@ final class Protoc {
     private final boolean useArgumentFile;
 
     /**
+     * A boolean indicating if experimental optional feature should be enabled.
+     */
+    private boolean useExperimentalOptional;
+
+    /**
      * Constructs a new instance. This should only be used by the {@link Builder}.
      *
      * @param executable path to the {@code protoc} executable.
@@ -148,6 +153,7 @@ final class Protoc {
      * @param nativePluginParameter an optional parameter for a native plugin.
      * @param tempDirectory a directory where temporary files will be generated.
      * @param useArgumentFile If {@code true}, parameters to protoc will be put in an argument file
+     * @param useExperimentalOptional If {@code true}, experimental optional feature will be enabled
      */
     private Protoc(
             final String executable,
@@ -168,7 +174,8 @@ final class Protoc {
             final String nativePluginExecutable,
             final String nativePluginParameter,
             final File tempDirectory,
-            final boolean useArgumentFile
+            final boolean useArgumentFile,
+            final boolean useExperimentalOptional
     ) {
         if (executable == null) {
             throw new MojoConfigurationException("'executable' is null");
@@ -198,6 +205,7 @@ final class Protoc {
         this.nativePluginParameter = nativePluginParameter;
         this.tempDirectory = tempDirectory;
         this.useArgumentFile = useArgumentFile;
+        this.useExperimentalOptional = useExperimentalOptional;
         this.error = new StringStreamConsumer();
         this.output = new StringStreamConsumer();
     }
@@ -254,6 +262,10 @@ final class Protoc {
         // add the executable
         for (final File protoPathElement : protoPathElements) {
             command.add("--proto_path=" + protoPathElement);
+        }
+        if (useExperimentalOptional) {
+            command.add("--experimental_allow_proto3_optional");
+
         }
         if (javaOutputDirectory != null) {
             String outputOption = "--java_out=";
@@ -506,6 +518,8 @@ final class Protoc {
 
         private boolean useArgumentFile;
 
+        private boolean useExperimentalOptional;
+
         /**
          * Constructs a new builder.
          *
@@ -749,6 +763,11 @@ final class Protoc {
             return this;
         }
 
+        public Builder useExperimentalOptional(final boolean useExperimentalOptional) {
+            this.useExperimentalOptional = useExperimentalOptional;
+            return this;
+        }
+
         private void checkProtoFileIsInProtopath(final File protoFile) {
             if (!protoFile.isFile()) {
                 throw new MojoConfigurationException("Not a regular file: " + protoFile.getAbsolutePath());
@@ -862,7 +881,8 @@ final class Protoc {
                     nativePluginExecutable,
                     nativePluginParameter,
                     tempDirectory,
-                    useArgumentFile);
+                    useArgumentFile,
+                    useExperimentalOptional);
         }
     }
 }
