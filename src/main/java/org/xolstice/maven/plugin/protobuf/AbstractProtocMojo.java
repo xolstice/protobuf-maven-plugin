@@ -603,7 +603,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
     protected boolean checkProtoFile(File fileProto) {
         if (skipFiles != null && skipFiles.size() > 0) {
             for (String file : skipFiles) {
-                if (fileProto.getAbsolutePath().endsWith(file)) {
+                if (fileProto.getAbsolutePath().endsWith("/"+file)) {
                     getLog().debug("skipping the file: " + fileProto.getAbsolutePath() + ", because skipped file is " + file);
                     return false;
                 }
