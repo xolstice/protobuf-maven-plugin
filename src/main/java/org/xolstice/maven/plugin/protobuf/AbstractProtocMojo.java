@@ -330,6 +330,8 @@ abstract class AbstractProtocMojo extends AbstractMojo {
      * <p>This parameter is only used when {@link #checkStaleness} parameter is set to {@code true}.
      *
      * <p>If the project is built on NFS it's recommended to set this parameter to {@code 10000}.
+     *
+     * @since 0.6.1
      */
     @Parameter(
             required = false,
@@ -344,6 +346,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
      * timestamps of source protobuf definitions vs. generated sources.
      *
      * @see #staleMillis
+     * @since 0.6.1
      */
     @Parameter(
             required = false,
