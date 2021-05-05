@@ -267,6 +267,7 @@ final class Protoc {
             for (final ProtocPlugin plugin : plugins) {
                 final File pluginExecutable = plugin.getPluginExecutableFile(pluginDirectory);
                 command.add("--plugin=protoc-gen-" + plugin.getId() + '=' + pluginExecutable);
+                command.add("--" + plugin.getId() + "_opt=\"" + plugin.getOptionsAsString() + "\"");
                 command.add("--" + plugin.getId() + "_out=" + javaOutputDirectory);
             }
         }

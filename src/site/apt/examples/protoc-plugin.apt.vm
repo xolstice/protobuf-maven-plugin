@@ -98,6 +98,8 @@ Using Custom Protoc Plugins
     are '32' or '64'.
 
   * <<<args>>> - (optional) argument to pass to the <<<main>>> method
+  
+  * <<<options>>> - (optional) options to be passed to the plugin <<<id>>>
 
   * <<<jvmArgs>>> - (optional) JVM arguments
 

@@ -60,6 +60,8 @@ public class ProtocPlugin {
     private String winJvmDataModel;
 
     private List<String> args;
+    
+    private List<String> options;
 
     private List<String> jvmArgs;
 
@@ -125,6 +127,22 @@ public class ProtocPlugin {
      */
     public List<String> getArgs() {
         return args != null ? args : emptyList();
+    }
+
+    /**
+     * Returns optional plugin options to be passed to protoc
+     * @return a list of plugin options
+     */
+    public List<String> getOptions() {
+        return options != null ? options : emptyList();
+    }
+
+    /**
+     * Returns list of plugin options as string
+     * @return
+     */
+    public String getOptionsAsString() {
+        return String.join(" ", getOptions());
     }
 
     /**
@@ -242,6 +260,7 @@ public class ProtocPlugin {
                 ", javaHome='" + javaHome + '\'' +
                 ", winJvmDataModel='" + winJvmDataModel + '\'' +
                 ", args=" + args +
+                ", options=" + options +
                 ", jvmArgs=" + jvmArgs +
                 '}';
     }
