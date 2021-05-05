@@ -333,6 +333,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
      */
     @Parameter(
             required = false,
+            property = "protoc.staleMillis",
             defaultValue = "0"
     )
     private long staleMillis;
@@ -346,6 +347,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
      */
     @Parameter(
             required = false,
+            property = "protoc.checkStaleness",
             defaultValue = "false"
     )
     private boolean checkStaleness;
