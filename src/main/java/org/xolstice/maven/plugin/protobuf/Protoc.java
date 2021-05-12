@@ -94,6 +94,11 @@ final class Protoc {
     private final File javaScriptOutputDirectory;
 
     /**
+     * A directory into which Kotlin source files will be generated.
+     */
+    private final File kotlinOutputDirectory;
+
+    /**
      *  A directory into which a custom protoc plugin will generate files.
      */
     private final File customOutputDirectory;
@@ -135,6 +140,7 @@ final class Protoc {
      * @param pythonOutputDirectory a directory into which Python source files will be generated.
      * @param csharpOutputDirectory a directory into which C# source files will be generated.
      * @param javaScriptOutputDirectory a directory into which JavaScript source files will be generated.
+     * @param kotlinOuptuDirectory a directory into which Kotlin source files will be generated.
      * @param customOutputDirectory a directory into which a custom protoc plugin will generate files.
      * @param descriptorSetFile The directory into which a descriptor set will be generated;
      *                          if {@code null}, no descriptor set will be written
@@ -158,6 +164,7 @@ final class Protoc {
             final File pythonOutputDirectory,
             final File csharpOutputDirectory,
             final File javaScriptOutputDirectory,
+            final File kotlinOutputDirectory,
             final File customOutputDirectory,
             final File descriptorSetFile,
             final boolean includeImportsInDescriptorSet,
@@ -187,6 +194,7 @@ final class Protoc {
         this.pythonOutputDirectory = pythonOutputDirectory;
         this.csharpOutputDirectory = csharpOutputDirectory;
         this.javaScriptOutputDirectory = javaScriptOutputDirectory;
+        this.kotlinOutputDirectory = kotlinOutputDirectory;
         this.customOutputDirectory = customOutputDirectory;
         this.descriptorSetFile = descriptorSetFile;
         this.includeImportsInDescriptorSet = includeImportsInDescriptorSet;
@@ -287,6 +295,9 @@ final class Protoc {
             outputOption += javaScriptOutputDirectory;
             command.add(outputOption);
         }
+        if (kotlinOutputDirectory != null) {
+            command.add("--kotlin_out=" + kotlinOutputDirectory);
+        }
         if (customOutputDirectory != null) {
             if (nativePluginExecutable != null) {
                 command.add("--plugin=protoc-gen-" + nativePluginId + '=' + nativePluginExecutable);
@@ -364,6 +375,10 @@ final class Protoc {
             if (javaScriptOutputDirectory != null) {
                 log.debug(LOG_PREFIX + "JavaScript output directory:");
                 log.debug(LOG_PREFIX + ' ' + javaScriptOutputDirectory);
+            }
+            if (kotlinOutputDirectory != null) {
+                log.debug(LOG_PREFIX + "Kotlin output directory:");
+                log.debug(LOG_PREFIX + ' ' + kotlinOutputDirectory);
             }
 
             if (descriptorSetFile != null) {
@@ -492,6 +507,11 @@ final class Protoc {
          * A directory into which JavaScript source files will be generated.
          */
         private File javaScriptOutputDirectory;
+
+        /**
+         * A directory into which Kotlin source files will be generated.
+         */
+        private File kotlinOutputDirectory;
 
         /**
          * A directory into which a custom protoc plugin will generate files.
@@ -625,6 +645,26 @@ final class Protoc {
         }
 
         /**
+         * Sets the directory into which Kotlin source files will be generated.
+         *
+         * @param kotlinOutputDirectory a directory into which Kotlin source files will be
+         * generated.
+         * @return this builder instance.
+         */
+        public Builder setKotlinOutputDirectory(final File kotlinOutputDirectory) {
+            if (kotlinOutputDirectory == null) {
+                throw new MojoConfigurationException("'kotlinOutputDirectory' is null");
+            }
+            if (!kotlinOutputDirectory.isDirectory()) {
+                throw new MojoConfigurationException(
+                        "'kotlinOutputDirectory' is not a directory: "
+                                + kotlinOutputDirectory.getAbsolutePath());
+            }
+            this.kotlinOutputDirectory = kotlinOutputDirectory;
+            return this;
+        }
+
+        /**
          * Sets the directory into which a custom protoc plugin will generate files.
          *
          * @param customOutputDirectory a directory into which a custom protoc plugin will generate files.
@@ -696,6 +736,7 @@ final class Protoc {
                     || nativePluginId.equals("python")
                     || nativePluginId.equals("csharp")
                     || nativePluginId.equals("cpp")
+                    || nativePluginId.equals("kotlin")
                     || nativePluginId.equals("descriptor_set")) {
                 throw new MojoConfigurationException("'nativePluginId' matches one of the built-in "
                         + "protoc plugins: " + nativePluginId);
@@ -827,12 +868,13 @@ final class Protoc {
                     && pythonOutputDirectory == null
                     && csharpOutputDirectory == null
                     && javaScriptOutputDirectory == null
+                    && kotlinOutputDirectory == null
                     && customOutputDirectory == null
                     && descriptorSetFile == null) {
                 throw new MojoConfigurationException("At least one of these properties must be set:" +
                         " 'javaOutputDirectory', 'cppOutputDirectory'," +
                         " 'pythonOutputDirectory', 'csharpOutputDirectory', 'javaScriptOutputDirectory'," +
-                        " 'customOutputDirectory', or 'descriptorSetFile'");
+                        " 'kotlinOutputDirectory', 'customOutputDirectory', or 'descriptorSetFile'");
             }
         }
 
@@ -852,6 +894,7 @@ final class Protoc {
                     pythonOutputDirectory,
                     csharpOutputDirectory,
                     javaScriptOutputDirectory,
+                    kotlinOutputDirectory,
                     customOutputDirectory,
                     descriptorSetFile,
                     includeImportsInDescriptorSet,
