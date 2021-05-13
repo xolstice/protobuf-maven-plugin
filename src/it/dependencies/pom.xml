@@ -166,7 +166,7 @@
                 <version>${protobufVersion}</version>
                 <type>exe</type>
                 <classifier>${os.detected.classifier}</classifier>
-                <scope>provided</scoope>
+                <scope>provided</scope>
               </dependency>
             </dependencies>
         </profile>
