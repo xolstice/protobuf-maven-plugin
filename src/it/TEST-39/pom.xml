@@ -42,13 +42,15 @@
                 <executions>
                     <execution>
                         <goals>
-                          <goal>compile</goal>
-                          <goal>compile-kotlin</goal>
+                            <goal>test-compile</goal>
+                            <goal>test-compile-kotlin</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <protocExecutable>/usr/local/bin/protoc</protocExecutable>
+                    <protocArtifact>
+                        com.google.protobuf:protoc:${protobufVersion}:exe:${os.detected.classifier}
+                    </protocArtifact>
                 </configuration>
             </plugin>
         </plugins>

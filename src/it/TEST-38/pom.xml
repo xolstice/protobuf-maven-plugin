@@ -28,10 +28,10 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>test-40</artifactId>
+    <artifactId>test-38</artifactId>
     <version>1.0.0</version>
 
-    <name>Integration Test 40</name>
+    <name>Integration Test 38</name>
 
     <build>
         <plugins>
@@ -42,13 +42,15 @@
                 <executions>
                     <execution>
                         <goals>
-                            <goal>test-compile</goal>
-                            <goal>test-compile-kotlin</goal>
+                          <goal>compile</goal>
+                          <goal>compile-kotlin</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                  <protocExecutable>/usr/local/bin/protoc</protocExecutable>
+                    <protocArtifact>
+                        com.google.protobuf:protoc:${protobufVersion}:exe:${os.detected.classifier}
+                    </protocArtifact>
                 </configuration>
             </plugin>
         </plugins>

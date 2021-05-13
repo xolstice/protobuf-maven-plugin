@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-javaOutputDirectory = new File(basedir, 'target/generated-test-sources/protobuf/java');
+javaOutputDirectory = new File(basedir, 'target/generated-sources/protobuf/java');
 assert javaOutputDirectory.exists();
 assert javaOutputDirectory.isDirectory();
 
-kotlinOutputDirectory = new File(basedir, 'target/generated-test-sources/protobuf/kotlin');
+kotlinOutputDirectory = new File(basedir, 'target/generated-sources/protobuf/kotlin');
 assert kotlinOutputDirectory.exists();
-assert kotlinOutputDirectory.isDirectory();
+assert kotlinOutputDirectory
 
 generatedJavaFile = new File(javaOutputDirectory, 'test/TestProtos.java');
 assert generatedJavaFile.exists();

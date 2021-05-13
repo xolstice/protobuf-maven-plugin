@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-javaOutputDirectory = new File(basedir, 'target/generated-sources/protobuf/java');
+javaOutputDirectory = new File(basedir, 'target/generated-test-sources/protobuf/java');
 assert javaOutputDirectory.exists();
 assert javaOutputDirectory.isDirectory();
 
-kotlinOutputDirectory = new File(basedir, 'target/generated-sources/protobuf/kotlin');
+kotlinOutputDirectory = new File(basedir, 'target/generated-test-sources/protobuf/kotlin');
 assert kotlinOutputDirectory.exists();
-assert kotlinOutputDirectory
+assert kotlinOutputDirectory.isDirectory();
 
 generatedJavaFile = new File(javaOutputDirectory, 'test/TestProtos.java');
 assert generatedJavaFile.exists();
@@ -30,12 +30,12 @@ generatedKotlinFile = new File(kotlinOutputDirectory, 'test/TestMessageKt.kt');
 assert generatedKotlinFile.exists();
 assert generatedKotlinFile.isFile();
 
-content = generatedJavaFile.text;
-assert content.contains('TestMessage');
-assert content.contains('NestedMessage');
+javaContent = generatedJavaFile.text;
+assert javaContent.contains('TestMessage');
+assert javaContent.contains('NestedMessage');
 
-content = generatedKotlinFile.text;
-assert content.contains('TestMessageKt');
-assert content.contains('NestedMessageKt');
+kotlinContent = generatedKotlinFile.text;
+assert kotlinContent.contains('TestMessageKt');
+assert kotlinContent.contains('NestedMessageKt');
 
 return true;

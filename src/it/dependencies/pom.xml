@@ -146,6 +146,32 @@
 
     <profiles>
         <profile>
+            <id>protoc-3.17.0-rc-2</id>
+
+            <properties>
+              <protobufVersion>3.17.0-rc-2</protobufVersion>
+            </properties>
+
+            <dependencies>
+              <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobufVersion}</version>
+                <scope>runtime</scope>
+              </dependency>
+
+              <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protoc</artifactId>
+                <version>${protobufVersion}</version>
+                <type>exe</type>
+                <classifier>${os.detected.classifier}</classifier>
+                <scope>provided</scoope>
+              </dependency>
+            </dependencies>
+        </profile>
+
+        <profile>
             <id>protoc-3.4.0</id>
 
             <properties>

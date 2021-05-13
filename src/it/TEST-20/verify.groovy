@@ -32,7 +32,7 @@ assert generatedClassFile.exists();
 assert generatedClassFile.isFile();
 
 content = generatedClassFile.text;
-assert content.contains('TestMessage::TestMessage()');
-assert content.contains('TestMessage_NestedMessage::TestMessage_NestedMessage()');
+assert content.contains('TestMessage::TestMessage(');
+assert content.contains('TestMessage_NestedMessage::TestMessage_NestedMessage(');
 
 return true;
