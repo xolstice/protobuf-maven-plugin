@@ -584,6 +584,15 @@ abstract class AbstractProtocMojo extends AbstractMojo {
                 if (matcher.find()) {
                     String protoFile = matcher.group(1);
                     File fileProto = new File(protoSourceRoot, protoFile);
+                    if (!fileProto.exists() && additionalProtoPathElements != null && additionalProtoPathElements.length > 0) {
+                        for (File element : additionalProtoPathElements) {
+                            fileProto = new File(element, protoFile);
+                            if (fileProto.exists()){
+                                break;
+                            }
+                        }
+                    }
+
                     if (!fileProto.exists()){
                         getLog().error("NO FIND IMPORT FILE: "+fileProto.getAbsolutePath());
                     }

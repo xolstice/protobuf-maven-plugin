@@ -24,7 +24,7 @@
     <artifactId>protobuf-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
     <name>Maven Protocol Buffers Plugin</name>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.8.0-SNAPSHOT</version>
     <url>https://www.xolstice.org/protobuf-maven-plugin</url>
     <description>Maven Plugin that executes the Protocol Buffers (protoc) compiler</description>
     <inceptionYear>2016</inceptionYear>
