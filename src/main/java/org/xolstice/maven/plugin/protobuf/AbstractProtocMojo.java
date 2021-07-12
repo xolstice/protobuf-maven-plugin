@@ -52,6 +52,7 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
@@ -185,6 +186,18 @@ abstract class AbstractProtocMojo extends AbstractMojo {
     private File tempDirectory;
 
     /**
+     * A directory where temporary files from source artifactory are placed.
+     *
+     * @since 0.6.0
+     */
+    @Parameter(
+            required = true,
+            readonly = true,
+            defaultValue = "${project.build.directory}/protobuf-artifacts"
+    )
+    private File tempSourcesDirectory;
+
+    /**
      * A directory where native launchers for java protoc plugins will be generated.
      *
      * @since 0.3.0
@@ -219,6 +232,17 @@ abstract class AbstractProtocMojo extends AbstractMojo {
             property = "protocArtifact"
     )
     private String protocArtifact;
+    
+    /**
+     * Source proto files artifact specification, in {@code groupId:artifactId:version[:type[:classifier]]} format.
+     * When this parameter is set, the plugin attempts to resolve the specified artifact and use all the proto files from it as sources.
+     *
+     */
+    @Parameter(
+            required = false,
+            property = "sourceArtifacts"
+    )
+    private List<String> sourceArtifacts;
 
     /**
      * Additional source paths for {@code .proto} definitions.
@@ -411,9 +435,26 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         }
 
         final File protoSourceRoot = getProtoSourceRoot();
-        if (protoSourceRoot.exists()) {
+        if (protoSourceRoot.exists() || sourceArtifacts != null) {
+            List<File> sourceRoots = new ArrayList<>();
+            
             try {
-                final List<File> protoFiles = findProtoFilesInDirectory(protoSourceRoot);
+                List<File> protoFiles = new ArrayList<>();
+                if (sourceArtifacts != null && !sourceArtifacts.isEmpty()) {
+                    List<File> resolvedFiles = new ArrayList<>();
+                    for (String sourceArtifact : sourceArtifacts) {
+                        final Artifact artifact = createDependencyArtifact(sourceArtifact, "jar");
+                        File a = getFileFrom(artifact);
+                        resolvedFiles.add(a);
+                        getLog().debug(String.format("Resolved file: '%s', isFile: %b, readable:%b", a, a.exists(), a.canRead()));
+                    }
+                    sourceRoots.addAll(makeProtoPathFromJars(tempSourcesDirectory, resolvedFiles));
+                    protoFiles.addAll(findProtoFilesInDirectory(tempSourcesDirectory));
+                }
+                if (protoSourceRoot.exists()) {
+                    protoFiles.addAll(findProtoFilesInDirectory(protoSourceRoot));
+                    sourceRoots.add(protoSourceRoot);
+                }
                 final File outputDirectory = getOutputDirectory();
                 final List<File> outputFiles = findGeneratedFilesInDirectory(getOutputDirectory());
 
@@ -466,7 +507,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
 
                     final Protoc.Builder protocBuilder =
                             new Protoc.Builder(protocExecutable)
-                                    .addProtoPathElement(protoSourceRoot)
+                                    .addProtoPathElements(sourceRoots)
                                     .addProtoPathElements(derivedProtoPathElements)
                                     .addProtoPathElements(asList(additionalProtoPathElements))
                                     .addProtoFiles(protoFiles);
@@ -955,42 +996,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
     }
 
     protected File resolveBinaryArtifact(final Artifact artifact) {
-        final ArtifactResolutionResult result;
-        final ArtifactResolutionRequest request = new ArtifactResolutionRequest()
-                .setArtifact(project.getArtifact())
-                .setResolveRoot(false)
-                .setResolveTransitively(false)
-                .setArtifactDependencies(singleton(artifact))
-                .setManagedVersionMap(emptyMap())
-                .setLocalRepository(localRepository)
-                .setRemoteRepositories(remoteRepositories)
-                .setOffline(session.isOffline())
-                .setForceUpdate(session.getRequest().isUpdateSnapshots())
-                .setServers(session.getRequest().getServers())
-                .setMirrors(session.getRequest().getMirrors())
-                .setProxies(session.getRequest().getProxies());
-
-        result = repositorySystem.resolve(request);
-
-        try {
-            resolutionErrorHandler.throwErrors(request, result);
-        } catch (final ArtifactResolutionException e) {
-            throw new MojoInitializationException("Unable to resolve artifact: " + e.getMessage(), e);
-        }
-
-        final Set<Artifact> artifacts = result.getArtifacts();
-
-        if (artifacts == null || artifacts.isEmpty()) {
-            throw new MojoInitializationException("Unable to resolve artifact");
-        }
-
-        final Artifact resolvedBinaryArtifact = artifacts.iterator().next();
-        if (getLog().isDebugEnabled()) {
-            getLog().debug("Resolved artifact: " + resolvedBinaryArtifact);
-        }
-
-        // Copy the file to the project build directory and make it executable
-        final File sourceFile = resolvedBinaryArtifact.getFile();
+        final File sourceFile = getFileFrom(artifact);
         final String sourceFileName = sourceFile.getName();
         final String targetFileName;
         if (Os.isFamily(Os.FAMILY_WINDOWS) && !sourceFileName.endsWith(".exe")) {
@@ -1023,6 +1029,74 @@ abstract class AbstractProtocMojo extends AbstractMojo {
         }
         return targetFile;
     }
+    
+    protected File resolveSourceArtifact(final Artifact artifact) {
+        final File sourceFile = getFileFrom(artifact);
+        final String sourceFileName = sourceFile.getName();
+        final String targetFileName;
+        
+        targetFileName = sourceFileName;
+        final File targetFile = new File(tempSourcesDirectory, targetFileName);
+        if (targetFile.exists()) {
+            // The file must have already been copied in a prior plugin execution/invocation
+            getLog().debug("File already exists: " + targetFile.getAbsolutePath());
+            return targetFile;
+        }
+        try {
+            FileUtils.forceMkdir(tempSourcesDirectory);
+        } catch (final IOException e) {
+            throw new MojoInitializationException("Unable to create directory " + tempSourcesDirectory, e);
+        }
+        try {
+            getLog().debug("Copying " + sourceFile + " -> " + targetFile);
+            FileUtils.copyFile(sourceFile, targetFile);
+        } catch (final IOException e) {
+            throw new MojoInitializationException("Unable to copy the file to " + tempSourcesDirectory, e);
+        }
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("File: " + targetFile.getAbsolutePath());
+        }
+        return targetFile;
+    }
+
+    private File getFileFrom(Artifact artifact) {
+        final ArtifactResolutionResult result;
+        final ArtifactResolutionRequest request = new ArtifactResolutionRequest()
+            .setArtifact(project.getArtifact())
+            .setResolveRoot(false)
+            .setResolveTransitively(false)
+            .setArtifactDependencies(singleton(artifact))
+            .setManagedVersionMap(emptyMap())
+            .setLocalRepository(localRepository)
+            .setRemoteRepositories(remoteRepositories)
+            .setOffline(session.isOffline())
+            .setForceUpdate(session.getRequest().isUpdateSnapshots())
+            .setServers(session.getRequest().getServers())
+            .setMirrors(session.getRequest().getMirrors())
+            .setProxies(session.getRequest().getProxies());
+
+        result = repositorySystem.resolve(request);
+
+        try {
+            resolutionErrorHandler.throwErrors(request, result);
+        } catch (final ArtifactResolutionException e) {
+            throw new MojoInitializationException("Unable to resolve artifact: " + e.getMessage(), e);
+        }
+
+        final Set<Artifact> artifacts = result.getArtifacts();
+
+        if (artifacts == null || artifacts.isEmpty()) {
+            throw new MojoInitializationException("Unable to resolve artifact");
+        }
+
+        final Artifact resolvedBinaryArtifact = artifacts.iterator().next();
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("Resolved artifact: " + resolvedBinaryArtifact);
+        }
+
+        // Copy the file to the project build directory and make it executable
+        return resolvedBinaryArtifact.getFile();
+    }
 
     /**
      * Creates a dependency artifact from a specification in
@@ -1032,6 +1106,10 @@ abstract class AbstractProtocMojo extends AbstractMojo {
      * @return artifact object instance.
      */
     protected Artifact createDependencyArtifact(final String artifactSpec) {
+        return createDependencyArtifact(artifactSpec, "exe");
+    }
+    
+    protected Artifact createDependencyArtifact(final String artifactSpec, String defaultType) {
         final String[] parts = artifactSpec.split(":");
         if (parts.length < 3 || parts.length > 5) {
             throw new MojoConfigurationException(
@@ -1039,7 +1117,7 @@ abstract class AbstractProtocMojo extends AbstractMojo {
                             + ", expected: groupId:artifactId:version[:type[:classifier]]"
                             + ", actual: " + artifactSpec);
         }
-        final String type = parts.length >= 4 ? parts[3] : "exe";
+        final String type = parts.length >= 4 ? parts[3] : defaultType;
         final String classifier = parts.length == 5 ? parts[4] : null;
         return createDependencyArtifact(parts[0], parts[1], parts[2], type, classifier);
     }
