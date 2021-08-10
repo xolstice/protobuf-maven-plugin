@@ -124,6 +124,12 @@ final class Protoc {
      */
     private final boolean useArgumentFile;
 
+
+    /**
+     * A high quality flag indicating that we don't want to generate java sources but still execute custom plugins.
+     */
+    private final boolean skipJava;
+
     /**
      * Constructs a new instance. This should only be used by the {@link Builder}.
      *
@@ -168,7 +174,8 @@ final class Protoc {
             final String nativePluginExecutable,
             final String nativePluginParameter,
             final File tempDirectory,
-            final boolean useArgumentFile
+            final boolean useArgumentFile,
+            final boolean skipJava
     ) {
         if (executable == null) {
             throw new MojoConfigurationException("'executable' is null");
@@ -200,6 +207,7 @@ final class Protoc {
         this.useArgumentFile = useArgumentFile;
         this.error = new StringStreamConsumer();
         this.output = new StringStreamConsumer();
+        this.skipJava = skipJava;
     }
 
     /**
@@ -256,14 +264,17 @@ final class Protoc {
             command.add("--proto_path=" + protoPathElement);
         }
         if (javaOutputDirectory != null) {
-            String outputOption = "--java_out=";
-            if (nativePluginParameter != null) {
-                outputOption += nativePluginParameter + ':';
+            // No java output if explicitly skipping
+            if (!skipJava) {
+                String outputOption = "--java_out=";
+                if (nativePluginParameter != null) {
+                    outputOption += nativePluginParameter + ':';
+                }
+                outputOption += javaOutputDirectory;
+                command.add(outputOption);
             }
-            outputOption += javaOutputDirectory;
-            command.add(outputOption);
-
             // For now we assume all custom plugins produce Java output
+            // TODO: No, please don't assume that
             for (final ProtocPlugin plugin : plugins) {
                 final File pluginExecutable = plugin.getPluginExecutableFile(pluginDirectory);
                 command.add("--plugin=protoc-gen-" + plugin.getId() + '=' + pluginExecutable);
@@ -505,6 +516,8 @@ final class Protoc {
         private boolean includeSourceInfoInDescriptorSet;
 
         private boolean useArgumentFile;
+
+        private boolean skipJava;
 
         /**
          * Constructs a new builder.
@@ -816,6 +829,15 @@ final class Protoc {
         }
 
         /**
+         * @param skipJava A high quality marker for skipping java-specific bindings
+         * @return this builder instance
+         */
+        public Builder setSkipJava(boolean skipJava) {
+            this.skipJava = skipJava;
+            return this;
+        }
+
+        /**
          * Validates the internal state for consistency and completeness.
          */
         private void validateState() {
@@ -862,7 +884,8 @@ final class Protoc {
                     nativePluginExecutable,
                     nativePluginParameter,
                     tempDirectory,
-                    useArgumentFile);
+                    useArgumentFile,
+                    skipJava);
         }
     }
 }

@@ -60,13 +60,23 @@ public final class ProtocCompileMojo extends AbstractProtocCompileMojo {
     )
     private String javaOptions;
 
+
+    @Parameter(
+            required = false,
+            property = "skipJava",
+            defaultValue = "false"
+    )
+    private Boolean skipJava;
+
     @Override
     protected void addProtocBuilderParameters(final Protoc.Builder protocBuilder) {
         super.addProtocBuilderParameters(protocBuilder);
         if (javaOptions != null) {
             protocBuilder.setNativePluginParameter(javaOptions);
         }
-        protocBuilder.setJavaOutputDirectory(getOutputDirectory());
+        protocBuilder
+                .setSkipJava(skipJava)
+                .setJavaOutputDirectory(getOutputDirectory());
     }
 
     @Override
