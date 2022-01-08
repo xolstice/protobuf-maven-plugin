@@ -39,7 +39,7 @@
         <java.compiler.source>${java.sdk.version}</java.compiler.source>
         <java.compiler.target>${java.sdk.version}</java.compiler.target>
 
-        <protobufVersion>3.4.0</protobufVersion>
+        <protobufVersion>3.16.1</protobufVersion>
     </properties>
 
     <build>
