@@ -41,7 +41,7 @@
 
         <mavenVersion>3.3.9</mavenVersion>
 
-        <protobufVersion>3.11.1</protobufVersion>
+        <protobufVersion>3.16.1</protobufVersion>
         <protobufJavaArtifact>protobuf-java</protobufJavaArtifact>
     </properties>
 
