@@ -34,7 +34,7 @@
     <name>Integration Test 28</name>
 
     <properties>
-        <grpcVersion>1.7.0</grpcVersion>
+        <grpcVersion>1.13.1</grpcVersion>
     </properties>
 
     <build>
