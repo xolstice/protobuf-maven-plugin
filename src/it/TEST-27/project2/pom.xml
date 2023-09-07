@@ -36,7 +36,7 @@
         <extensions>
             <extension>
                 <groupId>dev.cookiecode</groupId>
-                <artifactId>protobuf-maven-plugin</artifactId>
+                <artifactId>another-protobuf-maven-plugin</artifactId>
                 <version>@project.version@</version>
             </extension>
         </extensions>
