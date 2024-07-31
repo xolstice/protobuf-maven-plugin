@@ -18,9 +18,9 @@ package org.xolstice.maven.plugin.protobuf;
 
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.cli.CommandLineException;
-import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.CommandLineUtils.StringStreamConsumer;
 import org.codehaus.plexus.util.cli.Commandline;
+import org.codehaus.plexus.util.cli.StreamPumper;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,143 +33,129 @@ import java.util.List;
 import static org.codehaus.plexus.util.StringUtils.join;
 
 /**
- * This class represents an invokable configuration of the {@code protoc} compiler.
- * The actual executable is invoked using the plexus {@link Commandline}.
+ * This class represents an invokable configuration of the {@code protoc} compiler. The actual executable is invoked
+ * using the plexus {@link Commandline}.
  */
 final class Protoc {
-
+    
     /**
      * Prefix for logging the debug messages.
      */
     public static final String LOG_PREFIX = "[PROTOC] ";
-
+    
     /**
      * Path to the {@code protoc} executable.
      */
     private final String executable;
-
+    
     /**
      * A set of directories in which to search for definition imports.
      */
     private final List<File> protoPathElements;
-
+    
     /**
      * A set of protobuf definitions to process.
      */
     private final List<File> protoFiles;
-
+    
     /**
      * A directory into which Java source files will be generated.
      */
     private final File javaOutputDirectory;
-
+    
     private final List<ProtocPlugin> plugins;
-
+    
     private final File pluginDirectory;
-
+    
     private final String nativePluginId;
-
+    
     private final String nativePluginExecutable;
-
+    
     private final String nativePluginParameter;
-
+    
     /**
      * A directory into which C++ source files will be generated.
      */
     private final File cppOutputDirectory;
-
+    
     /**
      * A directory into which Python source files will be generated.
      */
     private final File pythonOutputDirectory;
-
+    
     /**
      * A directory into which C# source files will be generated.
      */
     private final File csharpOutputDirectory;
-
+    
     /**
      * A directory into which JavaScript source files will be generated.
      */
     private final File javaScriptOutputDirectory;
-
+    
     /**
-     *  A directory into which a custom protoc plugin will generate files.
+     * A directory into which a custom protoc plugin will generate files.
      */
     private final File customOutputDirectory;
-
+    
     private final File descriptorSetFile;
-
+    
     private final boolean includeImportsInDescriptorSet;
-
+    
     private final boolean includeSourceInfoInDescriptorSet;
-
+    
     /**
      * A buffer to consume standard output from the {@code protoc} executable.
      */
     private final StringStreamConsumer output;
-
+    
     /**
      * A buffer to consume error output from the {@code protoc} executable.
      */
     private final StringStreamConsumer error;
-
+    
     /**
      * A directory where temporary files will be generated.
      */
     private final File tempDirectory;
-
+    
     /**
      * A boolean indicating if the parameters to protoc should be passed in an argument file.
      */
     private final boolean useArgumentFile;
-
+    
     /**
      * Constructs a new instance. This should only be used by the {@link Builder}.
      *
-     * @param executable path to the {@code protoc} executable.
-     * @param protoPath a set of directories in which to search for definition imports.
-     * @param protoFiles a set of protobuf definitions to process.
-     * @param javaOutputDirectory a directory into which Java source files will be generated.
-     * @param cppOutputDirectory a directory into which C++ source files will be generated.
-     * @param pythonOutputDirectory a directory into which Python source files will be generated.
-     * @param csharpOutputDirectory a directory into which C# source files will be generated.
-     * @param javaScriptOutputDirectory a directory into which JavaScript source files will be generated.
-     * @param customOutputDirectory a directory into which a custom protoc plugin will generate files.
-     * @param descriptorSetFile The directory into which a descriptor set will be generated;
-     *                          if {@code null}, no descriptor set will be written
-     * @param includeImportsInDescriptorSet If {@code true}, dependencies will be included in the descriptor set.
-     * @param includeSourceInfoInDescriptorSet If {@code true}, source code information will be included
-     *                                         in the descriptor set.
-     * @param plugins a set of java protoc plugins.
-     * @param pluginDirectory location of protoc plugins to be added to system path.
-     * @param nativePluginId a unique id of a native plugin.
-     * @param nativePluginExecutable path to the native plugin executable.
-     * @param nativePluginParameter an optional parameter for a native plugin.
-     * @param tempDirectory a directory where temporary files will be generated.
-     * @param useArgumentFile If {@code true}, parameters to protoc will be put in an argument file
+     * @param executable                       path to the {@code protoc} executable.
+     * @param protoPath                        a set of directories in which to search for definition imports.
+     * @param protoFiles                       a set of protobuf definitions to process.
+     * @param javaOutputDirectory              a directory into which Java source files will be generated.
+     * @param cppOutputDirectory               a directory into which C++ source files will be generated.
+     * @param pythonOutputDirectory            a directory into which Python source files will be generated.
+     * @param csharpOutputDirectory            a directory into which C# source files will be generated.
+     * @param javaScriptOutputDirectory        a directory into which JavaScript source files will be generated.
+     * @param customOutputDirectory            a directory into which a custom protoc plugin will generate files.
+     * @param descriptorSetFile                The directory into which a descriptor set will be generated; if
+     *                                         {@code null}, no descriptor set will be written
+     * @param includeImportsInDescriptorSet    If {@code true}, dependencies will be included in the descriptor set.
+     * @param includeSourceInfoInDescriptorSet If {@code true}, source code information will be included in the
+     *                                         descriptor set.
+     * @param plugins                          a set of java protoc plugins.
+     * @param pluginDirectory                  location of protoc plugins to be added to system path.
+     * @param nativePluginId                   a unique id of a native plugin.
+     * @param nativePluginExecutable           path to the native plugin executable.
+     * @param nativePluginParameter            an optional parameter for a native plugin.
+     * @param tempDirectory                    a directory where temporary files will be generated.
+     * @param useArgumentFile                  If {@code true}, parameters to protoc will be put in an argument file
      */
-    private Protoc(
-            final String executable,
-            final List<File> protoPath,
-            final List<File> protoFiles,
-            final File javaOutputDirectory,
-            final File cppOutputDirectory,
-            final File pythonOutputDirectory,
-            final File csharpOutputDirectory,
-            final File javaScriptOutputDirectory,
-            final File customOutputDirectory,
-            final File descriptorSetFile,
-            final boolean includeImportsInDescriptorSet,
-            final boolean includeSourceInfoInDescriptorSet,
-            final List<ProtocPlugin> plugins,
-            final File pluginDirectory,
-            final String nativePluginId,
-            final String nativePluginExecutable,
-            final String nativePluginParameter,
-            final File tempDirectory,
-            final boolean useArgumentFile
-    ) {
+    private Protoc(final String executable, final List<File> protoPath, final List<File> protoFiles,
+            final File javaOutputDirectory, final File cppOutputDirectory, final File pythonOutputDirectory,
+            final File csharpOutputDirectory, final File javaScriptOutputDirectory, final File customOutputDirectory,
+            final File descriptorSetFile, final boolean includeImportsInDescriptorSet,
+            final boolean includeSourceInfoInDescriptorSet, final List<ProtocPlugin> plugins,
+            final File pluginDirectory, final String nativePluginId, final String nativePluginExecutable,
+            final String nativePluginParameter, final File tempDirectory, final boolean useArgumentFile) {
         if (executable == null) {
             throw new MojoConfigurationException("'executable' is null");
         }
@@ -201,7 +187,18 @@ final class Protoc {
         this.error = new StringStreamConsumer();
         this.output = new StringStreamConsumer();
     }
-
+    
+    /**
+     * Transcodes the output from system default charset to UTF-8. Protoc emits messages in UTF-8, but they are captured
+     * into a stream that has a system-default encoding.
+     *
+     * @param message a UTF-8 message in system-default encoding.
+     * @return the same message converted into a unicode string.
+     */
+    private static String fixUnicodeOutput(final String message) {
+        return new String(message.getBytes(), Charset.forName("UTF-8"));
+    }
+    
     /**
      * Invokes the {@code protoc} compiler using the configuration specified at construction.
      *
@@ -211,37 +208,48 @@ final class Protoc {
      * @throws InterruptedException if the execution was interrupted by the user.
      */
     public int execute(final Log log) throws CommandLineException, InterruptedException {
-        final Commandline cl = new Commandline();
-        cl.setExecutable(executable);
-        String[] args = buildProtocCommand().toArray(new String[] {});
+        List<String> command = new ArrayList<String>() {{
+            add(executable);
+        }};
+        
+        List<String> args = buildProtocCommand();
         if (useArgumentFile) {
             try {
                 File argumentsFile = createFileWithArguments(args);
                 log.debug(LOG_PREFIX + "Using arguments file " + argumentsFile.getPath());
-                cl.addArguments(new String[] {"@" + argumentsFile.getAbsolutePath()});
+                command.add("@" + argumentsFile.getAbsolutePath());
             } catch (final IOException e) {
                 throw new CommandLineException("Error creating file with protoc arguments", e);
             }
         } else {
-            cl.addArguments(args);
+            command.addAll(args);
         }
-        // There is a race condition in JDK that may sporadically prevent process creation on Linux
-        // https://bugs.openjdk.java.net/browse/JDK-8068370
-        // In order to mitigate that, retry up to 2 more times before giving up
-        int attemptsLeft = 3;
-        while (true) {
-            try {
-                return CommandLineUtils.executeCommandLine(cl, null, output, error);
-            } catch (CommandLineException e) {
-                if (--attemptsLeft == 0 || e.getCause() == null) {
-                    throw e;
-                }
-                log.warn(LOG_PREFIX + "Unable to invoke protoc, will retry " + attemptsLeft + " time(s)", e);
-                Thread.sleep(1000L);
-            }
+        
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        try {
+            // 启动进程
+            Process process = processBuilder.start();
+            outputStream(process);
+            // wait process end
+            return process.waitFor();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
-
+    
+    /**
+     * 输出流
+     *
+     * @param process 过程
+     */
+    private void outputStream(Process process) {
+        // 获取进程的输入流（标准输出）
+        StreamPumper outputPumper = new StreamPumper(process.getInputStream(), output);
+        outputPumper.start();
+        StreamPumper errorPumper = new StreamPumper(process.getErrorStream(), error);
+        errorPumper.start();
+    }
+    
     /**
      * Creates the command line arguments.
      *
@@ -262,7 +270,7 @@ final class Protoc {
             }
             outputOption += javaOutputDirectory;
             command.add(outputOption);
-
+            
             // For now we assume all custom plugins produce Java output
             for (final ProtocPlugin plugin : plugins) {
                 final File pluginExecutable = plugin.getPluginExecutableFile(pluginDirectory);
@@ -291,7 +299,7 @@ final class Protoc {
             if (nativePluginExecutable != null) {
                 command.add("--plugin=protoc-gen-" + nativePluginId + '=' + nativePluginExecutable);
             }
-
+            
             String outputOption = "--" + nativePluginId + "_out=";
             if (nativePluginParameter != null) {
                 outputOption += nativePluginParameter + ':';
@@ -313,10 +321,10 @@ final class Protoc {
         }
         return command;
     }
-
+    
     /**
-     * Logs execution parameters on debug level to the specified logger.
-     * All log messages will be prefixed with {@value #LOG_PREFIX}.
+     * Logs execution parameters on debug level to the specified logger. All log messages will be prefixed with
+     * {@value #LOG_PREFIX}.
      *
      * @param log a logger.
      */
@@ -324,18 +332,18 @@ final class Protoc {
         if (log.isDebugEnabled()) {
             log.debug(LOG_PREFIX + "Executable: ");
             log.debug(LOG_PREFIX + ' ' + executable);
-
+            
             if (protoPathElements != null && !protoPathElements.isEmpty()) {
                 log.debug(LOG_PREFIX + "Protobuf import paths:");
                 for (final File protoPathElement : protoPathElements) {
                     log.debug(LOG_PREFIX + ' ' + protoPathElement);
                 }
             }
-
+            
             if (javaOutputDirectory != null) {
                 log.debug(LOG_PREFIX + "Java output directory:");
                 log.debug(LOG_PREFIX + ' ' + javaOutputDirectory);
-
+                
                 if (plugins.size() > 0) {
                     log.debug(LOG_PREFIX + "Plugins for Java output:");
                     for (final ProtocPlugin plugin : plugins) {
@@ -343,12 +351,12 @@ final class Protoc {
                     }
                 }
             }
-
+            
             if (pluginDirectory != null) {
                 log.debug(LOG_PREFIX + "Plugin directory:");
                 log.debug(LOG_PREFIX + ' ' + pluginDirectory);
             }
-
+            
             if (cppOutputDirectory != null) {
                 log.debug(LOG_PREFIX + "C++ output directory:");
                 log.debug(LOG_PREFIX + ' ' + cppOutputDirectory);
@@ -365,19 +373,19 @@ final class Protoc {
                 log.debug(LOG_PREFIX + "JavaScript output directory:");
                 log.debug(LOG_PREFIX + ' ' + javaScriptOutputDirectory);
             }
-
+            
             if (descriptorSetFile != null) {
                 log.debug(LOG_PREFIX + "Descriptor set output file:");
                 log.debug(LOG_PREFIX + ' ' + descriptorSetFile);
                 log.debug(LOG_PREFIX + "Include imports:");
                 log.debug(LOG_PREFIX + ' ' + includeImportsInDescriptorSet);
             }
-
+            
             log.debug(LOG_PREFIX + "Protobuf descriptors:");
             for (final File protoFile : protoFiles) {
                 log.debug(LOG_PREFIX + ' ' + protoFile);
             }
-
+            
             final List<String> cl = buildProtocCommand();
             if (cl != null && !cl.isEmpty()) {
                 log.debug(LOG_PREFIX + "Command line options:");
@@ -385,32 +393,21 @@ final class Protoc {
             }
         }
     }
-
+    
     /**
      * @return the output
      */
     public String getOutput() {
         return fixUnicodeOutput(output.getOutput());
     }
-
+    
     /**
      * @return the error
      */
     public String getError() {
         return fixUnicodeOutput(error.getOutput());
     }
-
-    /**
-     * Transcodes the output from system default charset to UTF-8.
-     * Protoc emits messages in UTF-8, but they are captured into a stream that has a system-default encoding.
-     *
-     * @param message a UTF-8 message in system-default encoding.
-     * @return the same message converted into a unicode string.
-     */
-    private static String fixUnicodeOutput(final String message) {
-        return new String(message.getBytes(), Charset.forName("UTF-8"));
-    }
-
+    
     /**
      * Put args into a temp file to be referenced using the @ option in protoc command line.
      *
@@ -418,18 +415,18 @@ final class Protoc {
      * @return the temporary file wth the arguments
      * @throws IOException
      */
-    private File createFileWithArguments(String... args) throws IOException {
+    private File createFileWithArguments(List<String> args) throws IOException {
         PrintWriter writer = null;
         try {
             final File tempFile = File.createTempFile("protoc", null, tempDirectory);
             tempFile.deleteOnExit();
-
+            
             writer = new PrintWriter(tempFile, "UTF-8");
             for (final String arg : args) {
                 writer.println(arg);
             }
             writer.flush();
-
+            
             return tempFile;
         } finally {
             if (writer != null) {
@@ -437,75 +434,75 @@ final class Protoc {
             }
         }
     }
-
+    
     /**
      * This class builds {@link Protoc} instances.
      */
     static final class Builder {
-
+        
         /**
          * Path to the {@code protoc} executable.
          */
         private final String executable;
-
+        
         private final LinkedHashSet<File> protopathElements;
-
+        
         private final List<File> protoFiles;
-
+        
         private final List<ProtocPlugin> plugins;
-
+        
         private File tempDirectory;
-
+        
         private File pluginDirectory;
-
+        
         // TODO reorganise support for custom plugins
         // This place is currently a mess because of the two different type of custom plugins supported:
         // pure java (wrapped in a native launcher) and binary native.
-
+        
         private String nativePluginId;
-
+        
         private String nativePluginExecutable;
-
+        
         private String nativePluginParameter;
-
+        
         /**
          * A directory into which Java source files will be generated.
          */
         private File javaOutputDirectory;
-
+        
         /**
          * A directory into which C++ source files will be generated.
          */
         private File cppOutputDirectory;
-
+        
         /**
          * A directory into which Python source files will be generated.
          */
         private File pythonOutputDirectory;
-
+        
         /**
          * A directory into which C# source files will be generated.
          */
         private File csharpOutputDirectory;
-
+        
         /**
          * A directory into which JavaScript source files will be generated.
          */
         private File javaScriptOutputDirectory;
-
+        
         /**
          * A directory into which a custom protoc plugin will generate files.
          */
         private File customOutputDirectory;
-
+        
         private File descriptorSetFile;
-
+        
         private boolean includeImportsInDescriptorSet;
-
+        
         private boolean includeSourceInfoInDescriptorSet;
-
+        
         private boolean useArgumentFile;
-
+        
         /**
          * Constructs a new builder.
          *
@@ -520,7 +517,7 @@ final class Protoc {
             protopathElements = new LinkedHashSet<>();
             plugins = new ArrayList<>();
         }
-
+        
         public Builder setTempDirectory(final File tempDirectory) {
             if (tempDirectory == null) {
                 throw new MojoConfigurationException("'tempDirectory' is null");
@@ -532,7 +529,7 @@ final class Protoc {
             this.tempDirectory = tempDirectory;
             return this;
         }
-
+        
         /**
          * Sets the directory into which Java source files will be generated.
          *
@@ -550,7 +547,7 @@ final class Protoc {
             this.javaOutputDirectory = javaOutputDirectory;
             return this;
         }
-
+        
         /**
          * Sets the directory into which C++ source files will be generated.
          *
@@ -568,7 +565,7 @@ final class Protoc {
             this.cppOutputDirectory = cppOutputDirectory;
             return this;
         }
-
+        
         /**
          * Sets the directory into which Python source files will be generated.
          *
@@ -586,7 +583,7 @@ final class Protoc {
             this.pythonOutputDirectory = pythonOutputDirectory;
             return this;
         }
-
+        
         /**
          * Sets the directory into which C# source files will be generated.
          *
@@ -604,7 +601,7 @@ final class Protoc {
             this.csharpOutputDirectory = csharpOutputDirectory;
             return this;
         }
-
+        
         /**
          * Sets the directory into which JavaScript source files will be generated.
          *
@@ -616,14 +613,13 @@ final class Protoc {
                 throw new MojoConfigurationException("'javaScriptOutputDirectory' is null");
             }
             if (!javaScriptOutputDirectory.isDirectory()) {
-                throw new MojoConfigurationException(
-                        "'javaScriptOutputDirectory' is not a directory: "
-                                + javaScriptOutputDirectory.getAbsolutePath());
+                throw new MojoConfigurationException("'javaScriptOutputDirectory' is not a directory: "
+                        + javaScriptOutputDirectory.getAbsolutePath());
             }
             this.javaScriptOutputDirectory = javaScriptOutputDirectory;
             return this;
         }
-
+        
         /**
          * Sets the directory into which a custom protoc plugin will generate files.
          *
@@ -641,11 +637,10 @@ final class Protoc {
             this.customOutputDirectory = customOutputDirectory;
             return this;
         }
-
+        
         /**
-         * Adds a proto file to be compiled. Proto files must be on the protopath
-         * and this method will fail if a proto file is added without first adding a
-         * parent directory to the protopath.
+         * Adds a proto file to be compiled. Proto files must be on the protopath and this method will fail if a proto
+         * file is added without first adding a parent directory to the protopath.
          *
          * @param protoFile source protobuf definitions file.
          * @return The builder.
@@ -661,9 +656,10 @@ final class Protoc {
             protoFiles.add(protoFile);
             return this;
         }
-
+        
         /**
          * Adds a protoc plugin definition for custom code generation.
+         *
          * @param plugin plugin definition
          * @return this builder instance.
          */
@@ -674,7 +670,7 @@ final class Protoc {
             plugins.add(plugin);
             return this;
         }
-
+        
         public Builder setPluginDirectory(final File pluginDirectory) {
             if (pluginDirectory == null) {
                 throw new MojoConfigurationException("'pluginDirectory' is null");
@@ -686,24 +682,21 @@ final class Protoc {
             this.pluginDirectory = pluginDirectory;
             return this;
         }
-
+        
         public Builder setNativePluginId(final String nativePluginId) {
             if (nativePluginId == null || nativePluginId.isEmpty()) {
                 throw new MojoConfigurationException("'nativePluginId' is null or empty");
             }
-            if (nativePluginId.equals("java")
-                    || nativePluginId.equals("js")
-                    || nativePluginId.equals("python")
-                    || nativePluginId.equals("csharp")
-                    || nativePluginId.equals("cpp")
-                    || nativePluginId.equals("descriptor_set")) {
-                throw new MojoConfigurationException("'nativePluginId' matches one of the built-in "
-                        + "protoc plugins: " + nativePluginId);
+            if (nativePluginId.equals("java") || nativePluginId.equals("js") || nativePluginId.equals("python")
+                    || nativePluginId.equals("csharp") || nativePluginId.equals("cpp") || nativePluginId.equals(
+                    "descriptor_set")) {
+                throw new MojoConfigurationException(
+                        "'nativePluginId' matches one of the built-in " + "protoc plugins: " + nativePluginId);
             }
             this.nativePluginId = nativePluginId;
             return this;
         }
-
+        
         public Builder setNativePluginExecutable(final String nativePluginExecutable) {
             if (nativePluginExecutable == null || nativePluginExecutable.isEmpty()) {
                 throw new MojoConfigurationException("'nativePluginExecutable' is null or empty");
@@ -711,7 +704,7 @@ final class Protoc {
             this.nativePluginExecutable = nativePluginExecutable;
             return this;
         }
-
+        
         public Builder setNativePluginParameter(final String nativePluginParameter) {
             if (nativePluginParameter == null) {
                 throw new MojoConfigurationException("'nativePluginParameter' is null");
@@ -722,12 +715,9 @@ final class Protoc {
             this.nativePluginParameter = nativePluginParameter;
             return this;
         }
-
-        public Builder withDescriptorSetFile(
-                final File descriptorSetFile,
-                final boolean includeImports,
-                final boolean includeSourceInfoInDescriptorSet
-        ) {
+        
+        public Builder withDescriptorSetFile(final File descriptorSetFile, final boolean includeImports,
+                final boolean includeSourceInfoInDescriptorSet) {
             if (descriptorSetFile == null) {
                 throw new MojoConfigurationException("'descriptorSetFile' is null");
             }
@@ -743,12 +733,12 @@ final class Protoc {
             this.includeSourceInfoInDescriptorSet = includeSourceInfoInDescriptorSet;
             return this;
         }
-
+        
         public Builder useArgumentFile(final boolean useArgumentFile) {
             this.useArgumentFile = useArgumentFile;
             return this;
         }
-
+        
         private void checkProtoFileIsInProtopath(final File protoFile) {
             if (!protoFile.isFile()) {
                 throw new MojoConfigurationException("Not a regular file: " + protoFile.getAbsolutePath());
@@ -757,7 +747,7 @@ final class Protoc {
                 throw new MojoConfigurationException("File is not in proto path: " + protoFile.getAbsolutePath());
             }
         }
-
+        
         private boolean checkProtoFileIsInProtopathHelper(final File directory) {
             if (!directory.isDirectory()) {
                 throw new MojoConfigurationException("Not a directory: " + directory.getAbsolutePath());
@@ -768,7 +758,7 @@ final class Protoc {
             final File parentDirectory = directory.getParentFile();
             return parentDirectory != null && checkProtoFileIsInProtopathHelper(parentDirectory);
         }
-
+        
         /**
          * Adds a collection of proto files to be compiled.
          *
@@ -782,7 +772,7 @@ final class Protoc {
             }
             return this;
         }
-
+        
         /**
          * Adds the {@code protopathElement} to the protopath.
          *
@@ -800,7 +790,7 @@ final class Protoc {
             protopathElements.add(protopathElement);
             return this;
         }
-
+        
         /**
          * Adds a number of elements to the protopath.
          *
@@ -814,7 +804,7 @@ final class Protoc {
             }
             return this;
         }
-
+        
         /**
          * Validates the internal state for consistency and completeness.
          */
@@ -822,20 +812,16 @@ final class Protoc {
             if (protoFiles.isEmpty()) {
                 throw new MojoConfigurationException("No proto files specified");
             }
-            if (javaOutputDirectory == null
-                    && cppOutputDirectory == null
-                    && pythonOutputDirectory == null
-                    && csharpOutputDirectory == null
-                    && javaScriptOutputDirectory == null
-                    && customOutputDirectory == null
-                    && descriptorSetFile == null) {
-                throw new MojoConfigurationException("At least one of these properties must be set:" +
-                        " 'javaOutputDirectory', 'cppOutputDirectory'," +
-                        " 'pythonOutputDirectory', 'csharpOutputDirectory', 'javaScriptOutputDirectory'," +
-                        " 'customOutputDirectory', or 'descriptorSetFile'");
+            if (javaOutputDirectory == null && cppOutputDirectory == null && pythonOutputDirectory == null
+                    && csharpOutputDirectory == null && javaScriptOutputDirectory == null
+                    && customOutputDirectory == null && descriptorSetFile == null) {
+                throw new MojoConfigurationException("At least one of these properties must be set:"
+                        + " 'javaOutputDirectory', 'cppOutputDirectory',"
+                        + " 'pythonOutputDirectory', 'csharpOutputDirectory', 'javaScriptOutputDirectory',"
+                        + " 'customOutputDirectory', or 'descriptorSetFile'");
             }
         }
-
+        
         /**
          * Builds and returns a fully configured instance of {@link Protoc} wrapper.
          *
@@ -843,26 +829,11 @@ final class Protoc {
          */
         public Protoc build() {
             validateState();
-            return new Protoc(
-                    executable,
-                    new ArrayList<>(protopathElements),
-                    protoFiles,
-                    javaOutputDirectory,
-                    cppOutputDirectory,
-                    pythonOutputDirectory,
-                    csharpOutputDirectory,
-                    javaScriptOutputDirectory,
-                    customOutputDirectory,
-                    descriptorSetFile,
-                    includeImportsInDescriptorSet,
-                    includeSourceInfoInDescriptorSet,
-                    plugins,
-                    pluginDirectory,
-                    nativePluginId,
-                    nativePluginExecutable,
-                    nativePluginParameter,
-                    tempDirectory,
-                    useArgumentFile);
+            return new Protoc(executable, new ArrayList<>(protopathElements), protoFiles, javaOutputDirectory,
+                    cppOutputDirectory, pythonOutputDirectory, csharpOutputDirectory, javaScriptOutputDirectory,
+                    customOutputDirectory, descriptorSetFile, includeImportsInDescriptorSet,
+                    includeSourceInfoInDescriptorSet, plugins, pluginDirectory, nativePluginId, nativePluginExecutable,
+                    nativePluginParameter, tempDirectory, useArgumentFile);
         }
     }
 }
