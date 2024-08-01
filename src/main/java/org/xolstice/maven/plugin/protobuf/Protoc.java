@@ -227,7 +227,7 @@ final class Protoc {
         
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         try {
-            // 启动进程
+            // Start process
             Process process = processBuilder.start();
             outputStream(process);
             // wait process end
